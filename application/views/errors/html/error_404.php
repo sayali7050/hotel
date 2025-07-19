@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>404 Not Found - Hotel</title>
+  <meta content="" name="description">
+  <meta content="" name="keywords">
+  <link href="/assets/img/favicon.png" rel="icon">
+  <link href="/assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+  <link href="/assets/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/assets/vendor/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <link href="/assets/css/main.css" rel="stylesheet">
+  <style>
+    body { background: #f8f9fa; }
+    .error-container { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    .error-code { font-size: 7rem; font-weight: bold; color: #b02a37; }
+    .error-message { font-size: 2rem; margin-bottom: 1rem; }
+    .home-link { margin-top: 2rem; }
+  </style>
+</head>
+<body>
+  <div class="error-container text-center">
+    <img src="/assets/img/logo.webp" alt="Hotel Logo" style="width:100px; margin-bottom: 1rem;">
+    <div class="error-code">404</div>
+    <div class="error-message">Oops! The page you are looking for was not found.</div>
+    <p>It looks like nothing was found at this location. You can return to the homepage:</p>
+    <a href="/" class="btn btn-primary home-link"><i class="bi bi-house-door"></i> Back to Home</a>
+  </div>
+  <script src="/assets/vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
