@@ -61,7 +61,13 @@ $route['gallery'] = 'pages/gallery';
 $route['events'] = 'pages/events';
 $route['restaurant'] = 'pages/restaurant';
 $route['contact'] = 'pages/contact';
-$route['booking'] = 'pages/booking';
+$route['booking'] = 'booking/index';
+$route['booking/search-availability'] = 'booking/search_availability';
+$route['booking/select-room'] = 'booking/select_room';
+$route['booking/book-room/(:num)'] = 'booking/book_room/$1';
+$route['booking/process-booking'] = 'booking/process_booking';
+$route['booking/confirmation'] = 'booking/confirmation';
+$route['booking/cancel-booking/(:num)'] = 'booking/cancel_booking/$1';
 $route['offers'] = 'pages/offers';
 $route['privacy'] = 'pages/privacy';
 $route['terms'] = 'pages/terms';
@@ -75,6 +81,9 @@ $route['staff/login'] = 'auth/staff_login';
 $route['customer/login'] = 'auth/customer_login';
 $route['customer/register'] = 'auth/customer_register';
 $route['logout'] = 'auth/logout';
+$route['auth/test'] = 'auth/test';
+$route['debug'] = 'debug_login.php';
+$route['reset'] = 'reset_admin.php';
 
 // Admin panel routes
 $route['admin'] = 'admin/dashboard';

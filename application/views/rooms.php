@@ -113,7 +113,7 @@
         <p>Esse dolorum voluptatum ullam est sint nemo et est ipsa porro placeat quibusdam quia assumenda numquam molestias.</p>
         <nav class="breadcrumbs">
           <ol>
-            <li><a href="index.html">Home</a></li>
+            <li><a href="index.php">Home</a></li>
             <li class="current">Rooms</li>
           </ol>
         </nav>
@@ -223,8 +223,8 @@
                       <span><i class="bi bi-cup-hot"></i> Minibar</span>
                     </div>
                     <div class="room-actions">
-                      <a href="room-details.html" class="btn btn-primary">View Details</a>
-                      <a href="booking.html" class="btn btn-outline-primary">Check Availability</a>
+                      <a href="<?php echo base_url('room-details'); ?>" class="btn btn-primary">View Details</a>
+                      <a href="<?php echo base_url('booking'); ?>" class="btn btn-outline-primary">Check Availability</a>
                     </div>
                   </div>
                 </div>
@@ -248,8 +248,8 @@
                       <span><i class="bi bi-tv"></i> Smart TV</span>
                     </div>
                     <div class="room-actions">
-                      <a href="room-details.html" class="btn btn-primary">View Details</a>
-                      <a href="booking.html" class="btn btn-outline-primary">Check Availability</a>
+                      <a href="<?php echo base_url('room-details'); ?>" class="btn btn-primary">View Details</a>
+                      <a href="<?php echo base_url('booking'); ?>" class="btn btn-outline-primary">Check Availability</a>
                     </div>
                   </div>
                 </div>
@@ -274,8 +274,8 @@
                       <span><i class="bi bi-controller"></i> Game Console</span>
                     </div>
                     <div class="room-actions">
-                      <a href="room-details.html" class="btn btn-primary">View Details</a>
-                      <a href="booking.html" class="btn btn-outline-primary">Check Availability</a>
+                      <a href="<?php echo base_url('room-details'); ?>" class="btn btn-primary">View Details</a>
+                      <a href="<?php echo base_url('booking'); ?>" class="btn btn-outline-primary">Check Availability</a>
                     </div>
                   </div>
                 </div>
@@ -299,8 +299,8 @@
                       <span><i class="bi bi-telephone"></i> Business Line</span>
                     </div>
                     <div class="room-actions">
-                      <a href="room-details.html" class="btn btn-primary">View Details</a>
-                      <a href="booking.html" class="btn btn-outline-primary">Check Availability</a>
+                      <a href="<?php echo base_url('room-details'); ?>" class="btn btn-primary">View Details</a>
+                      <a href="<?php echo base_url('booking'); ?>" class="btn btn-outline-primary">Check Availability</a>
                     </div>
                   </div>
                 </div>
@@ -324,8 +324,8 @@
                       <span><i class="bi bi-car-front"></i> Free Parking</span>
                     </div>
                     <div class="room-actions">
-                      <a href="room-details.html" class="btn btn-primary">View Details</a>
-                      <a href="booking.html" class="btn btn-outline-primary">Check Availability</a>
+                      <a href="<?php echo base_url('room-details'); ?>" class="btn btn-primary">View Details</a>
+                      <a href="<?php echo base_url('booking'); ?>" class="btn btn-outline-primary">Check Availability</a>
                     </div>
                   </div>
                 </div>
@@ -350,8 +350,8 @@
                       <span><i class="bi bi-star"></i> Premium Access</span>
                     </div>
                     <div class="room-actions">
-                      <a href="room-details.html" class="btn btn-primary">View Details</a>
-                      <a href="booking.html" class="btn btn-outline-primary">Check Availability</a>
+                      <a href="<?php echo base_url('room-details'); ?>" class="btn btn-primary">View Details</a>
+                      <a href="<?php echo base_url('booking'); ?>" class="btn btn-outline-primary">Check Availability</a>
                     </div>
                   </div>
                 </div>

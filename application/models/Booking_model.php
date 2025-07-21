@@ -10,7 +10,8 @@ class Booking_model extends CI_Model {
     
     // Create new booking
     public function create_booking($data) {
-        return $this->db->insert('bookings', $data);
+        $this->db->insert('bookings', $data);
+        return $this->db->insert_id();
     }
     
     // Get booking by ID
@@ -79,7 +80,7 @@ class Booking_model extends CI_Model {
     // Get total revenue
     public function get_total_revenue() {
         $this->db->select_sum('total_amount');
-        $this->db->where('status IN', ['confirmed', 'checked_in', 'checked_out']);
+        $this->db->where_in('status', ['confirmed', 'checked_in', 'checked_out']);
         $result = $this->db->get('bookings')->row();
         return $result->total_amount ? $result->total_amount : 0;
     }
@@ -87,7 +88,7 @@ class Booking_model extends CI_Model {
     // Get monthly revenue
     public function get_monthly_revenue($year, $month) {
         $this->db->select_sum('total_amount');
-        $this->db->where('status IN', ['confirmed', 'checked_in', 'checked_out']);
+        $this->db->where_in('status', ['confirmed', 'checked_in', 'checked_out']);
         $this->db->where('YEAR(created_at)', $year);
         $this->db->where('MONTH(created_at)', $month);
         $result = $this->db->get('bookings')->row();
@@ -108,7 +109,7 @@ class Booking_model extends CI_Model {
     // Check if room is available for booking
     public function is_room_available($room_id, $check_in, $check_out, $exclude_booking_id = null) {
         $this->db->where('room_id', $room_id);
-        $this->db->where('status IN', ['confirmed', 'checked_in']);
+        $this->db->where_in('status', ['confirmed', 'checked_in']);
         $this->db->where("(check_in_date <= '$check_out' AND check_out_date >= '$check_in')");
         
         if ($exclude_booking_id) {

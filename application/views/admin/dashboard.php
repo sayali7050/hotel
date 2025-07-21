@@ -10,35 +10,23 @@
         body {
             background-color: #f8f9fa;
         }
-        .sidebar {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            color: white;
-        }
-        .sidebar .nav-link {
-            color: rgba(255, 255, 255, 0.8);
-            padding: 12px 20px;
-            border-radius: 8px;
-            margin: 2px 0;
-            transition: all 0.3s ease;
-        }
-        .sidebar .nav-link:hover,
-        .sidebar .nav-link.active {
-            color: white;
-            background-color: rgba(255, 255, 255, 0.1);
-        }
         .main-content {
+            margin-left: 250px;
             padding: 20px;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
         }
         .stat-card {
             background: white;
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            transition: transform 0.3s ease;
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(79, 172, 254, 0.1);
         }
         .stat-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 12px 35px rgba(79, 172, 254, 0.2);
         }
         .stat-icon {
             width: 60px;
@@ -53,45 +41,17 @@
         .table-card {
             background: white;
             border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.1);
+            border: 1px solid rgba(79, 172, 254, 0.1);
         }
     </style>
 </head>
 <body>
-    <div class="container-fluid">
-        <div class="row">
-            <!-- Sidebar -->
-            <div class="col-md-3 col-lg-2 sidebar p-0">
-                <div class="p-4">
-                    <h4 class="text-center mb-4">
-                        <i class="fas fa-hotel"></i> Admin Panel
-                    </h4>
-                    <nav class="nav flex-column">
-                        <a class="nav-link active" href="<?php echo base_url('admin/dashboard'); ?>">
-                            <i class="fas fa-tachometer-alt"></i> Dashboard
-                        </a>
-                        <a class="nav-link" href="<?php echo base_url('admin/users'); ?>">
-                            <i class="fas fa-users"></i> Users
-                        </a>
-                        <a class="nav-link" href="<?php echo base_url('admin/rooms'); ?>">
-                            <i class="fas fa-bed"></i> Rooms
-                        </a>
-                        <a class="nav-link" href="<?php echo base_url('admin/bookings'); ?>">
-                            <i class="fas fa-calendar-check"></i> Bookings
-                        </a>
-                        <a class="nav-link" href="<?php echo base_url('admin/reports'); ?>">
-                            <i class="fas fa-chart-bar"></i> Reports
-                        </a>
-                        <hr class="my-3">
-                        <a class="nav-link" href="<?php echo base_url('logout'); ?>">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </a>
-                    </nav>
-                </div>
-            </div>
+    <!-- Include Sidebar -->
+    <?php $this->load->view('admin/includes/sidebar'); ?>
 
-            <!-- Main Content -->
-            <div class="col-md-9 col-lg-10 main-content">
+    <!-- Main Content -->
+    <div class="main-content">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
                     <div class="text-muted">

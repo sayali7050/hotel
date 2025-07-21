@@ -10,7 +10,8 @@ class Customer extends CI_Controller {
         
         // Check if user is logged in and is customer
         if (!$this->session->userdata('logged_in') || $this->session->userdata('role') != 'customer') {
-            redirect('auth/customer_login');
+            $this->session->set_flashdata('error', 'You must be logged in as a customer to access this page.');
+            redirect(base_url());
         }
     }
     
@@ -36,9 +37,8 @@ class Customer extends CI_Controller {
     
     // View available rooms
     public function rooms() {
-        $data['rooms'] = $this->Room_model->get_available_rooms();
-        $data['room_types'] = $this->Room_model->get_room_types();
-        $this->load->view('customer/rooms', $data);
+        // Redirect to main hotel rooms page for consistent theme
+        redirect('rooms');
     }
     
     // Book a room

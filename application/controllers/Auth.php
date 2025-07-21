@@ -25,6 +25,7 @@ class Auth extends CI_Controller {
             $username = $this->input->post('username');
             $password = $this->input->post('password');
             
+            // Use the User_model login method
             $user = $this->User_model->login($username, $password);
             
             if ($user && $user->role == 'admin') {
@@ -38,7 +39,14 @@ class Auth extends CI_Controller {
                 
                 redirect('admin/dashboard');
             } else {
-                $this->session->set_flashdata('error', 'Invalid username or password');
+                // More specific error messages
+                if (!$user) {
+                    $this->session->set_flashdata('error', 'Invalid username or password');
+                } elseif ($user->role != 'admin') {
+                    $this->session->set_flashdata('error', 'Access denied. Admin privileges required.');
+                } else {
+                    $this->session->set_flashdata('error', 'Login failed. Please try again.');
+                }
                 redirect('auth/admin_login');
             }
         }
@@ -103,8 +111,14 @@ class Auth extends CI_Controller {
                     'role' => $user->role,
                     'logged_in' => TRUE
                 ]);
-                
-                redirect('customer/dashboard');
+                // Redirect to intended URL if set
+                $redirect = $this->session->userdata('redirect_after_login');
+                if ($redirect) {
+                    $this->session->unset_userdata('redirect_after_login');
+                    redirect($redirect);
+                } else {
+                    redirect('welcome'); // Changed from 'customer/dashboard' to 'welcome'
+                }
             } else {
                 $this->session->set_flashdata('error', 'Invalid username/email or password');
                 redirect('auth/customer_login');
@@ -153,5 +167,57 @@ class Auth extends CI_Controller {
     public function logout() {
         $this->session->sess_destroy();
         redirect('welcome');
+    }
+    
+    // Test method to check database and user data
+    public function test() {
+        echo "<h2>Database Test</h2>";
+        
+        // Test database connection
+        if ($this->db->simple_query('SELECT 1')) {
+            echo "<p style='color: green;'>✓ Database connection successful</p>";
+        } else {
+            echo "<p style='color: red;'>✗ Database connection failed</p>";
+            return;
+        }
+        
+        // Check if users table exists
+        if ($this->db->table_exists('users')) {
+            echo "<p style='color: green;'>✓ Users table exists</p>";
+        } else {
+            echo "<p style='color: red;'>✗ Users table does not exist</p>";
+            return;
+        }
+        
+        // Get all users
+        $users = $this->db->get('users')->result();
+        echo "<p>Total users: " . count($users) . "</p>";
+        
+        echo "<h3>User Details:</h3>";
+        foreach ($users as $user) {
+            echo "<p><strong>ID:</strong> {$user->id}, <strong>Username:</strong> {$user->username}, <strong>Email:</strong> {$user->email}, <strong>Role:</strong> {$user->role}, <strong>Status:</strong> {$user->status}</p>";
+        }
+        
+        // Test admin login specifically
+        echo "<h3>Admin Login Test:</h3>";
+        $this->db->where('username', 'admin');
+        $this->db->where('status', 'active');
+        $admin = $this->db->get('users')->row();
+        
+        if ($admin) {
+            echo "<p style='color: green;'>✓ Admin user found</p>";
+            echo "<p><strong>Admin ID:</strong> {$admin->id}</p>";
+            echo "<p><strong>Admin Role:</strong> {$admin->role}</p>";
+            
+            // Test password
+            $test_password = 'admin123';
+            if (password_verify($test_password, $admin->password)) {
+                echo "<p style='color: green;'>✓ Admin password is correct</p>";
+            } else {
+                echo "<p style='color: red;'>✗ Admin password is incorrect</p>";
+            }
+        } else {
+            echo "<p style='color: red;'>✗ Admin user not found</p>";
+        }
     }
 } 

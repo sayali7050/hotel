@@ -215,15 +215,13 @@ class Admin extends CI_Controller {
     }
     
     // Update booking status
-    public function update_booking_status($id) {
-        $status = $this->input->post('status');
-        
+    public function update_booking_status($id, $status) {
         if ($this->Booking_model->update_booking_status($id, $status)) {
             $this->session->set_flashdata('success', 'Booking status updated successfully');
         } else {
             $this->session->set_flashdata('error', 'Failed to update booking status');
         }
-        redirect('admin/bookings');
+        redirect('admin/view_booking/'.$id);
     }
     
     // View booking details
@@ -235,6 +233,47 @@ class Admin extends CI_Controller {
         }
         
         $this->load->view('admin/view_booking', $data);
+    }
+    
+    // Edit booking
+    public function edit_booking($id) {
+        $data['booking'] = $this->Booking_model->get_booking_by_id($id);
+        $data['rooms'] = $this->Room_model->get_all_rooms();
+        
+        if (!$data['booking']) {
+            redirect('admin/bookings');
+        }
+        
+        $this->form_validation->set_rules('status', 'Status', 'required');
+        $this->form_validation->set_rules('room_id', 'Room', 'required');
+        $this->form_validation->set_rules('check_in_date', 'Check-in Date', 'required');
+        $this->form_validation->set_rules('check_out_date', 'Check-out Date', 'required');
+        
+        if ($this->form_validation->run() == FALSE) {
+            $this->load->view('admin/edit_booking', $data);
+        } else {
+            $update_data = [
+                'status' => $this->input->post('status'),
+                'room_id' => $this->input->post('room_id'),
+                'check_in_date' => $this->input->post('check_in_date'),
+                'check_out_date' => $this->input->post('check_out_date'),
+                'special_requests' => $this->input->post('special_requests')
+            ];
+            
+            // Recalculate total amount if room or dates changed
+            $room = $this->Room_model->get_room_by_id($this->input->post('room_id'));
+            $check_in = new DateTime($this->input->post('check_in_date'));
+            $check_out = new DateTime($this->input->post('check_out_date'));
+            $nights = $check_in->diff($check_out)->days;
+            $update_data['total_amount'] = $room->price_per_night * $nights;
+            
+            if ($this->Booking_model->update_booking($id, $update_data)) {
+                $this->session->set_flashdata('success', 'Booking updated successfully');
+            } else {
+                $this->session->set_flashdata('error', 'Failed to update booking');
+            }
+            redirect('admin/view_booking/'.$id);
+        }
     }
     
     // Reports

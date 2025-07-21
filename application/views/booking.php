@@ -134,12 +134,12 @@
                 <p>Choose your dates and discover our available rooms with the best rates</p>
               </div>
 
-              <form class="booking-form" action="" method="POST">
+              <form class="booking-form" action="<?php echo base_url('booking/search_availability'); ?>" method="POST">
                 <div class="row g-3">
                   <div class="col-md-6">
                     <div class="form-group">
                       <label for="check-in-date">Check-in Date</label>
-                      <input type="date" class="form-control" id="check-in-date" name="check_in" required="">
+                      <input type="date" class="form-control" id="check-in-date" name="check_in_date" required="">
                       <small class="text-muted">Select your arrival date</small>
                     </div>
                   </div>
@@ -147,7 +147,7 @@
                   <div class="col-md-6">
                     <div class="form-group">
                       <label for="check-out-date">Check-out Date</label>
-                      <input type="date" class="form-control" id="check-out-date" name="check_out" required="">
+                      <input type="date" class="form-control" id="check-out-date" name="check_out_date" required="">
                       <small class="text-muted">Select your departure date</small>
                     </div>
                   </div>
@@ -205,7 +205,7 @@
 
                 <div class="booking-actions text-center">
 
-                  <button type="submit" class="btn btn-primary btn-lg">
+                  <button type="submit" name="search_availability" class="btn btn-primary btn-lg">
                     <i class="bi bi-search"></i>
                     Check Availability &amp; Rates
                   </button>

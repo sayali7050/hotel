@@ -26,14 +26,31 @@ class User_model extends CI_Model {
         return $this->db->insert('users', $data);
     }
     
+    // Create user (for guest bookings)
+    public function create_user($data) {
+        if (isset($data['password']) && !empty($data['password'])) {
+            $data['password'] = password_hash($data['password'], PASSWORD_DEFAULT);
+        }
+        
+        $this->db->insert('users', $data);
+        return $this->db->insert_id();
+    }
+    
     // Login user
     public function login($username, $password) {
+        // First try to find user by username
         $this->db->where('username', $username);
-        $this->db->or_where('email', $username);
         $this->db->where('status', 'active');
-        
         $user = $this->db->get('users')->row();
         
+        // If not found by username, try email
+        if (!$user) {
+            $this->db->where('email', $username);
+            $this->db->where('status', 'active');
+            $user = $this->db->get('users')->row();
+        }
+        
+        // If user found, verify password
         if ($user && password_verify($password, $user->password)) {
             return $user;
         }
