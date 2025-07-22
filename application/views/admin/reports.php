@@ -26,6 +26,7 @@
     </style>
 </head>
 <body>
+    <?php $this->load->view('admin/includes/header'); ?>
     <!-- Include Sidebar -->
     <?php $this->load->view('admin/includes/sidebar'); ?>
 

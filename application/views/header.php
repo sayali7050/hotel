@@ -110,7 +110,16 @@
                 </ul>
               </div>
             <?php else: ?>
-              <a class="btn btn-primary me-2 mb-2 mb-lg-0" href="<?php echo base_url('auth/customer_login'); ?>">Login</a>
+              <div class="dropdown me-2">
+                <button class="btn btn-primary dropdown-toggle" type="button" id="loginDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="<?php echo base_url('auth/admin_login'); ?>">Login as Admin</a></li>
+                  <li><a class="dropdown-item" href="<?php echo base_url('auth/staff_login'); ?>">Login as Staff</a></li>
+                  <li><a class="dropdown-item" href="<?php echo base_url('auth/customer_login'); ?>">Login as Customer</a></li>
+                </ul>
+              </div>
               <a class="btn btn-outline-light me-2 mb-2 mb-lg-0" href="<?php echo base_url('auth/customer_register'); ?>">Register</a>
             <?php endif; ?>
             <a class="btn-getstarted d-none d-sm-block ms-2" href="<?php echo base_url('booking'); ?>">Book Now</a>

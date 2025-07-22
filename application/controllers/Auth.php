@@ -117,7 +117,7 @@ class Auth extends CI_Controller {
                     $this->session->unset_userdata('redirect_after_login');
                     redirect($redirect);
                 } else {
-                    redirect('welcome'); // Changed from 'customer/dashboard' to 'welcome'
+                    redirect('customer/dashboard'); // Changed from 'customer/dashboard' to 'welcome'
                 }
             } else {
                 $this->session->set_flashdata('error', 'Invalid username/email or password');
