@@ -204,4 +204,69 @@ class Booking_model extends CI_Model {
         $room = $this->db->get('rooms')->row();
         return $room ? $room->price_per_night : 0;
     }
+
+    // Generate unique booking reference
+    public function generate_booking_reference() {
+        do {
+            $reference = 'BK' . date('Ymd') . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+            $this->db->where('booking_reference', $reference);
+            $exists = $this->db->get('bookings')->num_rows() > 0;
+        } while ($exists);
+        
+        return $reference;
+    }
+
+    // Update booking with additional data
+    public function update_booking_data($id, $data) {
+        $data['updated_at'] = date('Y-m-d H:i:s');
+        $this->db->where('id', $id);
+        return $this->db->update('bookings', $data);
+    }
+
+    // Get bookings with payment status
+    public function get_bookings_with_payment_status($status = null) {
+        $this->db->select('bookings.*, users.first_name, users.last_name, users.email, rooms.room_number, rooms.room_type');
+        $this->db->from('bookings');
+        $this->db->join('users', 'bookings.user_id = users.id');
+        $this->db->join('rooms', 'bookings.room_id = rooms.id');
+        
+        if ($status) {
+            $this->db->where('bookings.payment_status', $status);
+        }
+        
+        $this->db->order_by('bookings.created_at', 'DESC');
+        return $this->db->get()->result();
+    }
+
+    // Get booking by reference
+    public function get_booking_by_reference($reference) {
+        $this->db->select('bookings.*, users.first_name, users.last_name, users.email, users.phone, rooms.room_number, rooms.room_type, rooms.price_per_night');
+        $this->db->from('bookings');
+        $this->db->join('users', 'bookings.user_id = users.id');
+        $this->db->join('rooms', 'bookings.room_id = rooms.id');
+        $this->db->where('bookings.booking_reference', $reference);
+        return $this->db->get()->row();
+    }
+
+    // Cancel booking with inventory release
+    public function cancel_booking_with_inventory($id, $room_type = null) {
+        $this->db->trans_start();
+        
+        // Get booking details first
+        $booking = $this->get_booking_by_id($id);
+        if (!$booking) {
+            return false;
+        }
+        
+        // Update booking status
+        $this->update_booking_status($id, 'cancelled');
+        
+        // Release inventory if room_type provided
+        if ($room_type) {
+            $this->release_room_inventory($room_type, $booking->check_in_date, $booking->check_out_date, $booking->rooms);
+        }
+        
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
 } 

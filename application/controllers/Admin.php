@@ -903,4 +903,218 @@ class Admin extends CI_Controller {
         $this->session->set_flashdata('success', 'User account restored.');
         redirect('admin/deletion_requests');
     }
+
+    // System settings management
+    public function settings() {
+        $this->require_permission('manage_settings');
+        $this->load->model('Settings_model');
+        
+        if ($this->input->post()) {
+            $settings = $this->input->post('settings');
+            foreach ($settings as $key => $value) {
+                $this->Settings_model->set_setting($key, $value);
+            }
+            $this->session->set_flashdata('success', 'Settings updated successfully');
+            redirect('admin/settings');
+        }
+        
+        $data['settings'] = $this->Settings_model->get_all_settings();
+        $this->load->view('admin/settings', $data);
+    }
+
+    // Email templates management
+    public function email_templates() {
+        $this->require_permission('manage_settings');
+        $this->load->model('Email_template_model');
+        
+        $data['templates'] = $this->Email_template_model->get_all_templates();
+        $this->load->view('admin/email_templates', $data);
+    }
+
+    // Edit email template
+    public function edit_email_template($id) {
+        $this->require_permission('manage_settings');
+        $this->load->model('Email_template_model');
+        
+        if ($this->input->post()) {
+            $template_data = [
+                'name' => $this->input->post('name'),
+                'subject' => $this->input->post('subject'),
+                'body' => $this->input->post('body'),
+                'variables' => json_encode($this->input->post('variables')),
+                'active' => $this->input->post('active') ? 1 : 0
+            ];
+            
+            if ($this->Email_template_model->update_template($id, $template_data)) {
+                $this->session->set_flashdata('success', 'Email template updated successfully');
+            } else {
+                $this->session->set_flashdata('error', 'Failed to update email template');
+            }
+            redirect('admin/email_templates');
+        }
+        
+        $data['template'] = $this->Email_template_model->get_template_by_id($id);
+        $this->load->view('admin/edit_email_template', $data);
+    }
+
+    // Security logs
+    public function security_logs() {
+        $this->require_permission('view_logs');
+        
+        // Pagination
+        $this->load->library('pagination');
+        $config['base_url'] = base_url('admin/security_logs');
+        $config['total_rows'] = $this->db->count_all('security_logs');
+        $config['per_page'] = 50;
+        $this->pagination->initialize($config);
+        
+        // Get logs with pagination
+        $this->db->select('security_logs.*, users.username');
+        $this->db->from('security_logs');
+        $this->db->join('users', 'security_logs.user_id = users.id', 'left');
+        $this->db->order_by('security_logs.created_at', 'DESC');
+        $this->db->limit($config['per_page'], $this->input->get('per_page'));
+        
+        $data['logs'] = $this->db->get()->result();
+        $data['pagination'] = $this->pagination->create_links();
+        
+        // Get security statistics
+        $this->load->library('Security_helper');
+        $data['stats'] = $this->security_helper->get_security_stats();
+        
+        $this->load->view('admin/security_logs', $data);
+    }
+
+    // Loyalty system management
+    public function loyalty_system() {
+        $this->require_permission('manage_loyalty');
+        $this->load->model('Loyalty_model');
+        
+        $data['stats'] = $this->Loyalty_model->get_loyalty_stats();
+        
+        // Recent transactions
+        $this->db->select('loyalty_transactions.*, users.username, users.first_name, users.last_name');
+        $this->db->from('loyalty_transactions');
+        $this->db->join('users', 'loyalty_transactions.user_id = users.id');
+        $this->db->order_by('loyalty_transactions.created_at', 'DESC');
+        $this->db->limit(20);
+        $data['recent_transactions'] = $this->db->get()->result();
+        
+        $this->load->view('admin/loyalty_system', $data);
+    }
+
+    // Award loyalty points manually
+    public function award_loyalty_points() {
+        $this->require_permission('manage_loyalty');
+        $this->load->model('Loyalty_model');
+        
+        $this->form_validation->set_rules('user_id', 'User', 'required|numeric');
+        $this->form_validation->set_rules('points', 'Points', 'required|numeric|greater_than[0]');
+        $this->form_validation->set_rules('description', 'Description', 'required');
+        
+        if ($this->form_validation->run()) {
+            $user_id = $this->input->post('user_id');
+            $points = $this->input->post('points');
+            $description = $this->input->post('description');
+            
+            if ($this->Loyalty_model->award_points($user_id, $points, $description)) {
+                $this->session->set_flashdata('success', 'Loyalty points awarded successfully');
+            } else {
+                $this->session->set_flashdata('error', 'Failed to award loyalty points');
+            }
+        } else {
+            $this->session->set_flashdata('error', validation_errors());
+        }
+        
+        redirect('admin/loyalty_system');
+    }
+
+    // Room inventory management
+    public function room_inventory() {
+        $this->require_permission('manage_rooms');
+        $this->load->model('Room_inventory_model');
+        
+        $start_date = $this->input->get('start_date') ?: date('Y-m-d');
+        $end_date = $this->input->get('end_date') ?: date('Y-m-d', strtotime('+30 days'));
+        
+        $data['inventory'] = $this->Room_inventory_model->get_availability_report($start_date, $end_date);
+        $data['start_date'] = $start_date;
+        $data['end_date'] = $end_date;
+        
+        $this->load->view('admin/room_inventory', $data);
+    }
+
+    // Block rooms for maintenance
+    public function block_rooms() {
+        $this->require_permission('manage_rooms');
+        $this->load->model('Room_inventory_model');
+        
+        $this->form_validation->set_rules('room_type', 'Room Type', 'required');
+        $this->form_validation->set_rules('start_date', 'Start Date', 'required');
+        $this->form_validation->set_rules('end_date', 'End Date', 'required');
+        $this->form_validation->set_rules('quantity', 'Quantity', 'required|numeric|greater_than[0]');
+        
+        if ($this->form_validation->run()) {
+            $room_type = $this->input->post('room_type');
+            $start_date = $this->input->post('start_date');
+            $end_date = $this->input->post('end_date');
+            $quantity = $this->input->post('quantity');
+            
+            if ($this->Room_inventory_model->block_rooms($room_type, $start_date, $end_date, $quantity)) {
+                $this->session->set_flashdata('success', 'Rooms blocked successfully');
+            } else {
+                $this->session->set_flashdata('error', 'Failed to block rooms');
+            }
+        } else {
+            $this->session->set_flashdata('error', validation_errors());
+        }
+        
+        redirect('admin/room_inventory');
+    }
+
+    // System backup
+    public function backup() {
+        $this->require_permission('system_backup');
+        
+        // Simple database backup (you might want to use a more robust solution)
+        $backup_file = 'backup_' . date('Y-m-d_H-i-s') . '.sql';
+        $backup_path = FCPATH . 'backups/' . $backup_file;
+        
+        // Create backups directory if it doesn't exist
+        if (!is_dir(FCPATH . 'backups/')) {
+            mkdir(FCPATH . 'backups/', 0755, true);
+        }
+        
+        // Use mysqldump if available
+        $db_config = $this->db->database;
+        $command = "mysqldump -h {$db_config['hostname']} -u {$db_config['username']} -p{$db_config['password']} {$db_config['database']} > {$backup_path}";
+        
+        $output = [];
+        $return_var = 0;
+        exec($command, $output, $return_var);
+        
+        if ($return_var === 0 && file_exists($backup_path)) {
+            $this->session->set_flashdata('success', "Database backup created: {$backup_file}");
+        } else {
+            $this->session->set_flashdata('error', 'Failed to create database backup');
+        }
+        
+        redirect('admin/dashboard');
+    }
+
+    // System maintenance mode
+    public function toggle_maintenance_mode() {
+        $this->require_permission('system_maintenance');
+        $this->load->model('Settings_model');
+        
+        $current_mode = $this->Settings_model->get_setting('maintenance_mode', 'false');
+        $new_mode = ($current_mode === 'true') ? 'false' : 'true';
+        
+        $this->Settings_model->set_setting('maintenance_mode', $new_mode, 'System maintenance mode', 'boolean');
+        
+        $status = ($new_mode === 'true') ? 'enabled' : 'disabled';
+        $this->session->set_flashdata('success', "Maintenance mode {$status}");
+        
+        redirect('admin/dashboard');
+    }
 } 
