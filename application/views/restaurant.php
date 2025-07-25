@@ -38,6 +38,7 @@
 </head>
 
 <body class="restaurant-page">
+  <a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
 
   <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container position-relative d-flex align-items-center justify-content-between">
@@ -61,26 +62,25 @@
 
       <nav id="navmenu" class="navmenu">
         <ul>
-          <li><a href="<?php echo base_url(); ?>">Home</a></li>
-          <li><a href="<?php echo base_url('about'); ?>">About</a></li>
-          <li><a href="<?php echo base_url('rooms'); ?>">Rooms</a></li>
-          <li><a href="<?php echo base_url('amenities'); ?>">Amenities</a></li>
-          <li><a href="<?php echo base_url('location'); ?>">Location</a></li>
+          <li><a href="<?= base_url() ?>">Home</a></li>
+          <li><a href="<?= base_url('about') ?>">About</a></li>
+          <li><a href="<?= base_url('rooms') ?>">Rooms</a></li>
+          <li><a href="<?= base_url('amenities') ?>">Amenities</a></li>
+          <li><a href="<?= base_url('location') ?>">Location</a></li>
           <li class="dropdown"><a href="#"><span>Pages</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
             <ul>
-              <li><a href="<?php echo base_url('room-details'); ?>">Room Details</a></li>
-              <li><a href="<?php echo base_url('restaurant'); ?>" class="active">Restaurant</a></li>
-              <li><a href="<?php echo base_url('offers'); ?>">Offers</a></li>
-              <li><a href="<?php echo base_url('events'); ?>">Events</a></li>
-              <li><a href="<?php echo base_url('gallery'); ?>">Gallery</a></li>
-              <li><a href="<?php echo base_url('booking'); ?>">Booking</a></li>
-              <li><a href="<?php echo base_url('terms'); ?>">Terms Page</a></li>
-              <li><a href="<?php echo base_url('privacy'); ?>">Privacy Page</a></li>
-              <li><a href="<?php echo base_url('starter-page'); ?>">Starter Page</a></li>
+              <li><a href="<?= base_url('room-details') ?>">Room Details</a></li>
+              <li><a href="<?= base_url('restaurant') ?>" class="active">Restaurant</a></li>
+              <li><a href="<?= base_url('offers') ?>">Offers</a></li>
+              <li><a href="<?= base_url('events') ?>">Events</a></li>
+              <li><a href="<?= base_url('gallery') ?>">Gallery</a></li>
+              <li><a href="<?= base_url('booking') ?>">Booking</a></li>
+              <li><a href="<?= base_url('terms') ?>">Terms Page</a></li>
+              <li><a href="<?= base_url('privacy') ?>">Privacy Page</a></li>
+              <li><a href="<?= base_url('starter-page') ?>">Starter Page</a></li>
             </ul>
           </li>
-          <li><a href="<?php echo base_url('contact'); ?>">Contact</a></li>
-
+          <li><a href="<?= base_url('contact') ?>">Contact</a></li>
           <li class="dropdown">
             <a href="#english">
               <svg class="icon" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -96,7 +96,6 @@
               <li><a href="#spanish">Spanish</a></li>
             </ul>
           </li>
-
         </ul>
         <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
       </nav>
@@ -106,7 +105,7 @@
     </div>
   </header>
 
-  <main class="main">
+  <main id="main-content" role="main">
 
     <!-- Page Title -->
     <div class="page-title dark-background" data-aos="fade" style="background-image: url(<?php echo base_url('assets/img/hotel/showcase-7.webp');">
@@ -123,7 +122,7 @@
     </div><!-- End Page Title -->
 
     <!-- Restaurant Section -->
-    <section id="restaurant" class="restaurant section">
+    <section id="restaurant" class="restaurant section" aria-label="Hotel Restaurant" role="region">
 
       <div class="container" data-aos="fade-up" data-aos-delay="100">
 
@@ -527,6 +526,30 @@
 
   <!-- Main JS File -->
   <script src="<?php echo base_url('assets/js/main.js'); ?>"></script>
+
+  <style>
+  .visually-hidden-focusable.skip-link {
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    z-index: 1000;
+  }
+  .visually-hidden-focusable.skip-link:focus {
+    left: 10px;
+    top: 10px;
+    width: auto;
+    height: auto;
+    background: #0072ff;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    outline: 2px solid #fff;
+    text-decoration: none;
+  }
+  </style>
 
 </body>
 

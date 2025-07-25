@@ -11,9 +11,31 @@
         .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
         .password-card { background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
         .password-header { background: linear-gradient(45deg, #667eea, #764ba2); color: white; border-radius: 15px 15px 0 0; padding: 30px; text-align: center; }
+        .visually-hidden-focusable.skip-link {
+            position: absolute;
+            left: -9999px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            z-index: 1000;
+        }
+        .visually-hidden-focusable.skip-link:focus {
+            left: 10px;
+            top: 10px;
+            width: auto;
+            height: auto;
+            background: #0072ff;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            outline: 2px solid #fff;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
+    <a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
@@ -52,74 +74,74 @@
         </div>
     </nav>
 
-    <div class="container mt-4">
-        <div class="row justify-content-center">
-            <div class="col-lg-6">
-                <div class="password-card">
-                    <div class="password-header">
-                        <i class="fas fa-lock fa-4x mb-3"></i>
-                        <h3>Change Password</h3>
-                        <p class="mb-0">Update your account password</p>
-                    </div>
-                    
-                    <div class="p-4">
-                        <?php if($this->session->flashdata('success')): ?>
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                                <i class="fas fa-check-circle"></i> <?php echo $this->session->flashdata('success'); ?>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        <?php endif; ?>
+    <main id="main-content" role="main">
+        <div class="container mt-4">
+            <div class="row justify-content-center">
+                <div class="col-lg-6">
+                    <div class="password-card">
+                        <div class="password-header">
+                            <i class="fas fa-lock fa-4x mb-3"></i>
+                            <h3>Change Password</h3>
+                            <p class="mb-0">Update your account password</p>
+                        </div>
                         
-                        <?php if($this->session->flashdata('error')): ?>
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <i class="fas fa-exclamation-triangle"></i> <?php echo $this->session->flashdata('error'); ?>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        <?php endif; ?>
+                        <div class="p-4">
+                            <?php if($this->session->flashdata('success')): ?>
+                                <div class="alert alert-success" role="alert" aria-live="polite">
+                                    <i class="fas fa-check-circle"></i> <?php echo $this->session->flashdata('success'); ?>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <?php if($this->session->flashdata('error')): ?>
+                                <div class="alert alert-danger" role="alert" aria-live="assertive">
+                                    <i class="fas fa-exclamation-triangle"></i> <?php echo $this->session->flashdata('error'); ?>
+                                </div>
+                            <?php endif; ?>
 
-                        <?php if(validation_errors()): ?>
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <i class="fas fa-exclamation-triangle"></i> Please fix the following errors:
-                                <ul class="mb-0 mt-2">
-                                    <?php echo validation_errors('<li>', '</li>'); ?>
-                                </ul>
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        <?php endif; ?>
+                            <?php if(validation_errors()): ?>
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <i class="fas fa-exclamation-triangle"></i> Please fix the following errors:
+                                    <ul class="mb-0 mt-2">
+                                        <?php echo validation_errors('<li>', '</li>'); ?>
+                                    </ul>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                </div>
+                            <?php endif; ?>
 
-                        <?php echo form_open('customer/change_password'); ?>
-                            <div class="mb-3">
-                                <label for="current_password" class="form-label">Current Password *</label>
-                                <input type="password" class="form-control" id="current_password" name="current_password" required>
-                                <small class="text-muted">Enter your current password to verify your identity</small>
-                            </div>
+                            <?php echo form_open('customer/change_password'); ?>
+                                <div class="mb-3">
+                                    <label for="current_password" class="form-label">Current Password *</label>
+                                    <input type="password" class="form-control" id="current_password" name="current_password" required>
+                                    <small class="text-muted">Enter your current password to verify your identity</small>
+                                </div>
 
-                            <div class="mb-3">
-                                <label for="new_password" class="form-label">New Password *</label>
-                                <input type="password" class="form-control" id="new_password" name="new_password" required>
-                                <small class="text-muted">Minimum 6 characters</small>
-                            </div>
+                                <div class="mb-3">
+                                    <label for="new_password" class="form-label">New Password *</label>
+                                    <input type="password" class="form-control" id="new_password" name="new_password" required>
+                                    <small class="text-muted">Minimum 6 characters</small>
+                                </div>
 
-                            <div class="mb-4">
-                                <label for="confirm_password" class="form-label">Confirm New Password *</label>
-                                <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
-                                <small class="text-muted">Re-enter your new password</small>
-                            </div>
+                                <div class="mb-4">
+                                    <label for="confirm_password" class="form-label">Confirm New Password *</label>
+                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                                    <small class="text-muted">Re-enter your new password</small>
+                                </div>
 
-                            <div class="d-flex justify-content-between">
-                                <a href="<?php echo base_url('customer/profile'); ?>" class="btn btn-secondary">
-                                    <i class="fas fa-arrow-left"></i> Back to Profile
-                                </a>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-key"></i> Change Password
-                                </button>
-                            </div>
-                        <?php echo form_close(); ?>
+                                <div class="d-flex justify-content-between">
+                                    <a href="<?php echo base_url('customer/profile'); ?>" class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left"></i> Back to Profile
+                                    </a>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-key"></i> Change Password
+                                    </button>
+                                </div>
+                            <?php echo form_close(); ?>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

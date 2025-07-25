@@ -20,15 +20,37 @@
             box-shadow: 0 8px 25px rgba(79, 172, 254, 0.1);
             border: 1px solid rgba(79, 172, 254, 0.1);
         }
+        .visually-hidden-focusable.skip-link {
+            position: absolute;
+            left: -9999px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            z-index: 1000;
+        }
+        .visually-hidden-focusable.skip-link:focus {
+            left: 10px;
+            top: 10px;
+            width: auto;
+            height: auto;
+            background: #0072ff;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            outline: 2px solid #fff;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
+    <a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
     <?php $this->load->view('admin/includes/header'); ?>
     <!-- Include Sidebar -->
     <?php $this->load->view('admin/includes/sidebar'); ?>
 
     <!-- Main Content -->
-    <div class="main-content">
+    <main id="main-content" role="main">
 
     <div class="container mt-4">
         <div class="row">
@@ -47,14 +69,14 @@
                 <div class="col-lg-8">
                     <div class="edit-card p-4">
                         <?php if($this->session->flashdata('success')): ?>
-                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <div class="alert alert-success" role="alert" aria-live="polite">
                                 <i class="fas fa-check-circle"></i> <?php echo $this->session->flashdata('success'); ?>
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
                         <?php endif; ?>
                         
                         <?php if($this->session->flashdata('error')): ?>
-                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <div class="alert alert-danger" role="alert" aria-live="assertive">
                                 <i class="fas fa-exclamation-triangle"></i> <?php echo $this->session->flashdata('error'); ?>
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>

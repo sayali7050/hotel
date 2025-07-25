@@ -63,8 +63,9 @@ class Booking extends CI_Controller {
         // Find available rooms
         $available_rooms = $this->find_available_rooms($check_in, $check_out, $adults, $children, $rooms);
         if (empty($available_rooms)) {
-            $this->session->set_flashdata('error', 'No rooms available for the selected dates and criteria');
-            redirect('booking');
+            // Store search data for waitlist
+            $this->session->set_userdata('waitlist_search', $search_data);
+            redirect('booking/waitlist_form');
         }
         redirect('booking/select_room');
     }
@@ -105,49 +106,46 @@ class Booking extends CI_Controller {
         }
         $data['search_data'] = $search_data;
         $data['total_amount'] = $data['room']->price_per_night * $search_data['nights'];
+        $data['applied_coupon'] = $this->session->userdata('applied_coupon') ?? null;
         $this->load->view('booking/book_room', $data);
+    }
+
+    // AJAX endpoint to apply coupon (optional, for real-time feedback)
+    public function apply_coupon() {
+        $this->load->model('Coupon_model');
+        $code = $this->input->post('coupon_code');
+        $room_id = $this->input->post('room_id');
+        $nights = $this->input->post('nights');
+        $room = $this->Room_model->get_room_by_id($room_id);
+        $coupon = $this->Coupon_model->get_active_coupon($code);
+        $discount = 0;
+        if ($coupon) {
+            $base = $room->price_per_night * $nights;
+            $discount = $coupon->discount_type == 'percent' ? ($base * $coupon->discount_value / 100) : $coupon->discount_value;
+            $discount = min($discount, $base);
+            echo json_encode(['success' => true, 'discount' => $discount, 'code' => $coupon->code]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Invalid or expired coupon.']);
+        }
+        exit;
     }
 
     // Process booking
     public function process_booking() {
-        // Emergency: Show all errors
-        ini_set('display_errors', 1);
-        error_reporting(E_ALL);
-        set_error_handler(function($errno, $errstr, $errfile, $errline) {
-            echo "<h2 style='color:red;'>PHP Error [$errno]</h2>";
-            echo "<pre>$errstr in $errfile on line $errline</pre>";
-            exit;
-        });
-        register_shutdown_function(function() {
-            $error = error_get_last();
-            if ($error) {
-                echo "<h2 style='color:red;'>Fatal Error</h2>";
-                echo "<pre>" . print_r($error, true) . "</pre>";
-            }
-        });
         $search_data = $this->session->userdata('booking_search');
         if (!$search_data) redirect('booking');
-        $this->form_validation->set_rules('room_id', 'Room', 'required|numeric');
-        $this->form_validation->set_rules('guest_name', 'Guest Name', 'required');
-        $this->form_validation->set_rules('guest_email', 'Email', 'required|valid_email');
-        $this->form_validation->set_rules('guest_phone', 'Phone', 'required');
-        $this->form_validation->set_rules('guest_address', 'Address', 'required');
-        $this->form_validation->set_rules('payment_method', 'Payment Method', 'required');
-        $this->form_validation->set_rules('terms_accepted', 'Terms and Conditions', 'required');
-        if ($this->form_validation->run() == FALSE) {
-            $this->session->set_flashdata('error', validation_errors());
-            redirect('booking/book_room/' . $this->input->post('room_id'));
+        $room_type = $search_data['room_type'];
+        $quantity = isset($search_data['rooms']) ? (int)$search_data['rooms'] : 1;
+        $check_in = $search_data['check_in_date'];
+        $check_out = $search_data['check_out_date'];
+        // Check inventory
+        if (!$this->Booking_model->is_room_type_available($room_type, $check_in, $check_out, $quantity)) {
+            $this->session->set_flashdata('error', 'Not enough rooms available for the selected dates.');
+            redirect('booking');
         }
-        $room_id = $this->input->post('room_id');
-        $room = $this->Room_model->get_room_by_id($room_id);
-        if (!$room) {
-            $this->session->set_flashdata('error', 'Room not found');
-            redirect('booking/select_room');
-        }
-        if (!$this->Booking_model->is_room_available($room_id, $search_data['check_in_date'], $search_data['check_out_date'])) {
-            $this->session->set_flashdata('error', 'Room is no longer available');
-            redirect('booking/select_room');
-        }
+        // Reserve inventory
+        $this->Booking_model->reserve_room_inventory($room_type, $check_in, $check_out, $quantity);
+        // Extra safety: Check user_id and room_id
         $user_id = null;
         if ($this->session->userdata('logged_in')) {
             $user_id = $this->session->userdata('user_id');
@@ -171,58 +169,47 @@ class Booking extends CI_Controller {
                 exit;
             }
         }
-        // Extra safety: Check user_id and room_id
-        if (!$user_id || !$room_id) {
-            echo '<h2 style="color:red;">Invalid user_id or room_id</h2>';
-            echo '<pre>user_id: ' . print_r($user_id, true) . '</pre>';
-            echo '<pre>room_id: ' . print_r($room_id, true) . '</pre>';
-            exit;
+        // Create bookings for each room requested
+        for ($i = 0; $i < $quantity; $i++) {
+            // Calculate total amount using rate plans
+            $total_amount = 0;
+            $current = strtotime($check_in);
+            $end = strtotime($check_out);
+            while ($current < $end) {
+                $date = date('Y-m-d', $current);
+                $rate = $this->Booking_model->get_price_per_night($room_type, $date);
+                $total_amount += $rate;
+                $current = strtotime('+1 day', $current);
+            }
+            $booking_data = [
+                'user_id' => $user_id,
+                'room_id' => null, // assign specific room if needed
+                'room_type' => $room_type,
+                'check_in_date' => $check_in,
+                'check_out_date' => $check_out,
+                'adults' => $search_data['adults'],
+                'children' => $search_data['children'],
+                'rooms' => 1,
+                'total_amount' => $total_amount,
+                'status' => 'confirmed',
+                'special_requests' => $search_data['special_requests'] ?? '',
+                'guest_name' => $this->input->post('guest_name'),
+                'guest_email' => $this->input->post('guest_email'),
+                'guest_phone' => $this->input->post('guest_phone'),
+                'guest_address' => $this->input->post('guest_address'),
+                'payment_method' => $this->input->post('payment_method'),
+                'created_at' => date('Y-m-d H:i:s'),
+                'updated_at' => date('Y-m-d H:i:s')
+            ];
+            $this->Booking_model->create_booking($booking_data);
+            // Award loyalty points: 1 point per $10 spent
+            $points = floor($total_amount / 10);
+            if ($points > 0) {
+                $this->User_model->add_loyalty_points($user_id, $points);
+            }
         }
-        // Double-check user_id exists
-        $user_check = $this->User_model->get_user_by_id($user_id);
-        if (!$user_check) {
-            echo '<h2 style="color:red;">user_id does not exist in users table</h2>';
-            echo '<pre>user_id: ' . print_r($user_id, true) . '</pre>';
-            exit;
-        }
-        // Double-check room_id exists
-        $room_check = $this->Room_model->get_room_by_id($room_id);
-        if (!$room_check) {
-            echo '<h2 style="color:red;">room_id does not exist in rooms table</h2>';
-            echo '<pre>room_id: ' . print_r($room_id, true) . '</pre>';
-            exit;
-        }
-        $total_amount = $room->price_per_night * $search_data['nights'];
-        $booking_data = [
-            'user_id' => $user_id,
-            'room_id' => $room_id,
-            'check_in_date' => $search_data['check_in_date'],
-            'check_out_date' => $search_data['check_out_date'],
-            'adults' => $search_data['adults'],
-            'children' => $search_data['children'],
-            'rooms' => $search_data['rooms'],
-            'total_amount' => $total_amount,
-            'special_requests' => $search_data['special_requests'],
-            'guest_name' => $this->input->post('guest_name'),
-            'guest_email' => $this->input->post('guest_email'),
-            'guest_phone' => $this->input->post('guest_phone'),
-            'guest_address' => $this->input->post('guest_address'),
-            'payment_method' => $this->input->post('payment_method'),
-            'status' => 'pending',
-            'created_at' => date('Y-m-d H:i:s')
-        ];
-        $booking_id = $this->Booking_model->create_booking($booking_data);
-        if ($booking_id) {
-            $this->session->unset_userdata('booking_search');
-            $this->session->set_userdata('last_booking_id', $booking_id);
-            redirect('booking/confirmation');
-        } else {
-            echo '<h2 style="color:red;">Failed to create booking. Please try again.</h2>';
-            echo '<h3>Booking Data:</h3>';
-            echo '<pre>' . print_r($booking_data, true) . '</pre>';
-            echo '<pre>DB Error: ' . print_r($this->db->error(), true) . '</pre>';
-            exit;
-        }
+        $this->session->set_flashdata('success', 'Booking successful!');
+        redirect('booking/confirmation');
     }
 
     // Booking confirmation page
@@ -260,11 +247,54 @@ class Booking extends CI_Controller {
             $this->session->set_flashdata('error', 'This booking cannot be cancelled');
             redirect('booking');
         }
+        // Release inventory
+        $this->Booking_model->release_room_inventory($booking->room_type, $booking->check_in_date, $booking->check_out_date, 1);
         if ($this->Booking_model->update_booking_status($booking_id, 'cancelled')) {
             $this->session->set_flashdata('success', 'Booking cancelled successfully');
         } else {
             $this->session->set_flashdata('error', 'Failed to cancel booking');
         }
+        redirect('booking');
+    }
+
+    // Show waitlist form
+    public function waitlist_form() {
+        $search_data = $this->session->userdata('waitlist_search');
+        if (!$search_data) redirect('booking');
+        $data['search_data'] = $search_data;
+        $this->load->view('booking/waitlist_form', $data);
+    }
+
+    // Handle waitlist submission
+    public function submit_waitlist() {
+        $this->load->model('Waitlist_model');
+        $search_data = $this->session->userdata('waitlist_search');
+        if (!$search_data) redirect('booking');
+        $this->form_validation->set_rules('guest_name', 'Name', 'required');
+        $this->form_validation->set_rules('guest_email', 'Email', 'required|valid_email');
+        $this->form_validation->set_rules('guest_phone', 'Phone', 'required');
+        if ($this->form_validation->run() == FALSE) {
+            $data['search_data'] = $search_data;
+            $this->load->view('booking/waitlist_form', $data);
+            return;
+        }
+        $waitlist_data = [
+            'user_id' => $this->session->userdata('logged_in') ? $this->session->userdata('user_id') : null,
+            'guest_name' => $this->input->post('guest_name'),
+            'guest_email' => $this->input->post('guest_email'),
+            'guest_phone' => $this->input->post('guest_phone'),
+            'room_type' => $search_data['room_type'] ?? '',
+            'check_in_date' => $search_data['check_in_date'],
+            'check_out_date' => $search_data['check_out_date'],
+            'adults' => $search_data['adults'],
+            'children' => $search_data['children'],
+            'special_requests' => $search_data['special_requests'] ?? '',
+            'status' => 'waiting',
+            'created_at' => date('Y-m-d H:i:s')
+        ];
+        $this->Waitlist_model->add_waitlist($waitlist_data);
+        $this->session->unset_userdata('waitlist_search');
+        $this->session->set_flashdata('success', 'You have been added to the waitlist. We will notify you if a room becomes available.');
         redirect('booking');
     }
 } 

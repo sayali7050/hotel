@@ -38,6 +38,7 @@
 </head>
 
 <body class="about-page">
+  <a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
 
   <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container position-relative d-flex align-items-center justify-content-between">
@@ -106,7 +107,7 @@
     </div>
   </header>
 
-  <main class="main">
+  <main id="main-content" role="main">
 
     <!-- Page Title -->
     <div class="page-title dark-background" data-aos="fade" style="background-image: url(<?php echo base_url('assets/img/hotel/showcase-7.webp') ?>);">
@@ -123,7 +124,7 @@
     </div><!-- End Page Title -->
 
     <!-- About Section -->
-    <section id="about" class="about section">
+    <section id="about" class="about section" aria-label="About the Hotel" role="region">
 
       <div class="container" data-aos="fade-up" data-aos-delay="100">
 
@@ -574,6 +575,30 @@
 
   <!-- Main JS File -->
   <script src="<?php echo base_url('assets/js/main.js'); ?>"></script>
+
+  <style>
+  .visually-hidden-focusable.skip-link {
+    position: absolute;
+    left: -9999px;
+    top: auto;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    z-index: 1000;
+  }
+  .visually-hidden-focusable.skip-link:focus {
+    left: 10px;
+    top: 10px;
+    width: auto;
+    height: auto;
+    background: #0072ff;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 4px;
+    outline: 2px solid #fff;
+    text-decoration: none;
+  }
+  </style>
 
 </body>
 

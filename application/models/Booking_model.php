@@ -118,4 +118,90 @@ class Booking_model extends CI_Model {
         
         return $this->db->get('bookings')->num_rows() == 0;
     }
+
+    // Get number of occupied rooms on a given date
+    public function get_occupied_count_on($date) {
+        $this->db->where('status IN ("confirmed", "checked_in")');
+        $this->db->where('check_in_date <=', $date);
+        $this->db->where('check_out_date >', $date);
+        return $this->db->count_all_results('bookings');
+    }
+
+    // Get total revenue for a given date
+    public function get_revenue_on($date) {
+        $this->db->select_sum('total_amount');
+        $this->db->where('status IN ("confirmed", "checked_in", "checked_out")');
+        $this->db->where('check_in_date <=', $date);
+        $this->db->where('check_out_date >', $date);
+        $result = $this->db->get('bookings')->row();
+        return $result ? (float)$result->total_amount : 0;
+    }
+
+    // Check if a room type is available for a given date range and quantity
+    public function is_room_type_available($room_type, $check_in, $check_out, $quantity = 1) {
+        $current = strtotime($check_in);
+        $end = strtotime($check_out);
+        while ($current < $end) {
+            $date = date('Y-m-d', $current);
+            $this->db->where('room_type', $room_type);
+            $this->db->where('date', $date);
+            $row = $this->db->get('room_inventory')->row();
+            if (!$row || ($row->total_rooms - $row->booked_rooms) < $quantity) {
+                return false;
+            }
+            $current = strtotime('+1 day', $current);
+        }
+        return true;
+    }
+
+    // Reserve inventory for a room type and date range
+    public function reserve_room_inventory($room_type, $check_in, $check_out, $quantity = 1) {
+        $current = strtotime($check_in);
+        $end = strtotime($check_out);
+        $this->db->trans_start();
+        while ($current < $end) {
+            $date = date('Y-m-d', $current);
+            $this->db->set('booked_rooms', 'booked_rooms + ' . (int)$quantity, false);
+            $this->db->where('room_type', $room_type);
+            $this->db->where('date', $date);
+            $this->db->update('room_inventory');
+            $current = strtotime('+1 day', $current);
+        }
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+
+    // Release inventory for a room type and date range (e.g., on cancel)
+    public function release_room_inventory($room_type, $check_in, $check_out, $quantity = 1) {
+        $current = strtotime($check_in);
+        $end = strtotime($check_out);
+        $this->db->trans_start();
+        while ($current < $end) {
+            $date = date('Y-m-d', $current);
+            $this->db->set('booked_rooms', 'GREATEST(booked_rooms - ' . (int)$quantity . ', 0)', false);
+            $this->db->where('room_type', $room_type);
+            $this->db->where('date', $date);
+            $this->db->update('room_inventory');
+            $current = strtotime('+1 day', $current);
+        }
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+
+    // Get price per night for a room type and date (using rate plans)
+    public function get_price_per_night($room_type, $date) {
+        $this->db->where('room_type', $room_type);
+        $this->db->where('active', 1);
+        $this->db->where('start_date <=', $date);
+        $this->db->where('end_date >=', $date);
+        $this->db->order_by('start_date DESC');
+        $plan = $this->db->get('rate_plans')->row();
+        if ($plan) {
+            return $plan->price_per_night;
+        }
+        // fallback: get default from rooms table
+        $this->db->where('room_type', $room_type);
+        $room = $this->db->get('rooms')->row();
+        return $room ? $room->price_per_night : 0;
+    }
 } 

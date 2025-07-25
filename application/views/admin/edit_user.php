@@ -20,15 +20,37 @@
             box-shadow: 0 8px 25px rgba(79, 172, 254, 0.1);
             border: 1px solid rgba(79, 172, 254, 0.1);
         }
+        .visually-hidden-focusable.skip-link {
+            position: absolute;
+            left: -9999px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            z-index: 1000;
+        }
+        .visually-hidden-focusable.skip-link:focus {
+            left: 10px;
+            top: 10px;
+            width: auto;
+            height: auto;
+            background: #0072ff;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            outline: 2px solid #fff;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
+    <a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
     <?php $this->load->view('admin/includes/header'); ?>
     <!-- Include Sidebar -->
     <?php $this->load->view('admin/includes/sidebar'); ?>
 
     <!-- Main Content -->
-    <div class="main-content">
+    <main id="main-content" role="main">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2><i class="fas fa-user-edit"></i> Edit User</h2>
                 <a href="<?php echo base_url('admin/users'); ?>" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back to Users</a>
@@ -43,7 +65,17 @@
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 <?php endif; ?>
-                <?php echo form_open('admin/edit_user/'.$user->id); ?>
+                <?php if ($this->session->flashdata('success')): ?>
+                    <div class="alert alert-success" role="alert" aria-live="polite">
+                        <?= $this->session->flashdata('success') ?>
+                    </div>
+                <?php endif; ?>
+                <?php if ($this->session->flashdata('error')): ?>
+                    <div class="alert alert-danger" role="alert" aria-live="assertive">
+                        <?= $this->session->flashdata('error') ?>
+                    </div>
+                <?php endif; ?>
+                <?php echo form_open('admin/edit_user/'.$user->id, ['aria-label' => 'Edit user details']); ?>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label for="first_name" class="form-label">First Name</label>
@@ -87,6 +119,25 @@
                             </select>
                         </div>
                     </div>
+                    <?php if($user->role == 'admin'): ?>
+                    <?php $CI =& get_instance(); $perms = $CI->User_model->get_permissions($user->id); ?>
+                    <div class="mb-3">
+                        <label class="form-label">Admin Permissions</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="permissions[manage_bookings]" id="perm_bookings" value="1" <?php if(!empty($perms['manage_bookings'])) echo 'checked'; ?>>
+                            <label class="form-check-label" for="perm_bookings">Manage Bookings</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="permissions[manage_rooms]" id="perm_rooms" value="1" <?php if(!empty($perms['manage_rooms'])) echo 'checked'; ?>>
+                            <label class="form-check-label" for="perm_rooms">Manage Rooms</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="permissions[manage_users]" id="perm_users" value="1" <?php if(!empty($perms['manage_users'])) echo 'checked'; ?>>
+                            <label class="form-check-label" for="perm_users">Manage Users</label>
+                        </div>
+                        <small class="text-muted">Uncheck to restrict this admin's access to specific modules.</small>
+                    </div>
+                    <?php endif; ?>
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Username</label>
@@ -104,7 +155,7 @@
                     </div>
                 <?php echo form_close(); ?>
             </div>
-        </div>
+        </main>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>

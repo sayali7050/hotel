@@ -203,13 +203,41 @@
         .terms-checkbox a:hover {
             text-decoration: underline;
         }
+        .visually-hidden-focusable.skip-link {
+            position: absolute;
+            left: -9999px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            z-index: 1000;
+        }
+        .visually-hidden-focusable.skip-link:focus {
+            left: 10px;
+            top: 10px;
+            width: auto;
+            height: auto;
+            background: #0072ff;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            outline: 2px solid #fff;
+            text-decoration: none;
+        }
+        .error-message {
+            color: #b30000;
+            font-size: 1em;
+            margin-top: 2px;
+            display: block;
+        }
     </style>
 </head>
 <body>
+    <a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-lg-10">
-                <div class="booking-container">
+                <div class="booking-container" role="main" id="main-content">
                     <!-- Header -->
                     <div class="booking-header">
                         <h2><i class="fas fa-credit-card me-3"></i>Complete Your Booking</h2>
@@ -226,7 +254,7 @@
                             </div>
                         <?php endif; ?>
                         
-                        <form action="<?php echo base_url('booking/process_booking'); ?>" method="POST">
+                        <form action="<?php echo base_url('booking/process_booking'); ?>" method="POST" aria-labelledby="bookingFormTitle">
                             <input type="hidden" name="room_id" value="<?php echo $room->id; ?>">
                             <div class="row">
                                 <!-- Left Column - Guest Details -->
@@ -234,9 +262,9 @@
                                     <!-- Room Summary -->
                                     <div class="room-summary">
                                         <div class="d-flex align-items-center">
-                                            <div class="room-image" style="background-image: url('<?php echo base_url('assets/img/hotel/room-' . rand(1, 12) . '.webp'); ?>');"></div>
+                                            <div class="room-image" style="background-image: url('<?php echo base_url('assets/img/hotel/room-' . rand(1, 12) . '.webp'); ?>');" role="img" aria-label="Room image"></div>
                                             <div>
-                                                <h5 class="mb-1"><?php echo $room->room_type; ?> Room</h5>
+                                                <h5 class="mb-1" id="room-type-label"><?php echo $room->room_type; ?> Room</h5>
                                                 <p class="mb-1 text-muted">Room <?php echo $room->room_number; ?> • <?php echo $room->capacity; ?> Guests</p>
                                                 <p class="mb-0 text-muted">
                                                     <?php echo date('M d', strtotime($search_data['check_in_date'])); ?> - 
@@ -253,56 +281,65 @@
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label for="guest_name" class="form-label">Full Name *</label>
-                                            <input type="text" class="form-control" id="guest_name" name="guest_name" 
-                                                   value="<?php echo $this->session->userdata('logged_in') ? $this->session->userdata('first_name') . ' ' . $this->session->userdata('last_name') : ''; ?>" required>
+                                            <input type="text" class="form-control" id="guest_name" name="guest_name" aria-required="true" aria-label="Full Name" required>
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label for="guest_email" class="form-label">Email Address *</label>
-                                            <input type="email" class="form-control" id="guest_email" name="guest_email" 
-                                                   value="<?php echo $this->session->userdata('logged_in') ? $this->session->userdata('email') : ''; ?>" required>
+                                            <input type="email" class="form-control" id="guest_email" name="guest_email" aria-required="true" aria-label="Email Address" required>
                                         </div>
                                     </div>
                                     
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label for="guest_phone" class="form-label">Phone Number *</label>
-                                            <input type="tel" class="form-control" id="guest_phone" name="guest_phone" 
-                                                   value="<?php echo $this->session->userdata('logged_in') ? $this->session->userdata('phone') : ''; ?>" required>
+                                            <input type="tel" class="form-control" id="guest_phone" name="guest_phone" aria-required="true" aria-label="Phone Number" required>
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label for="guest_address" class="form-label">Address *</label>
-                                            <input type="text" class="form-control" id="guest_address" name="guest_address" 
-                                                   value="<?php echo $this->session->userdata('logged_in') ? $this->session->userdata('address') : ''; ?>" required>
+                                            <input type="text" class="form-control" id="guest_address" name="guest_address" aria-required="true" aria-label="Address" required>
                                         </div>
                                     </div>
                                     
                                     <!-- Payment Method -->
                                     <h5 class="mb-3 mt-4"><i class="fas fa-credit-card me-2"></i>Payment Method</h5>
                                     
-                                    <div class="payment-method" onclick="selectPayment('credit_card')">
+                                    <div class="payment-method" onclick="selectPayment('credit_card')" tabindex="0" role="radio" aria-checked="false" aria-label="Credit or Debit Card">
                                         <input type="radio" name="payment_method" id="credit_card" value="credit_card" required>
                                         <label for="credit_card">
                                             <i class="fas fa-credit-card me-2"></i>Credit/Debit Card
                                         </label>
                                     </div>
                                     
-                                    <div class="payment-method" onclick="selectPayment('paypal')">
+                                    <div class="payment-method" onclick="selectPayment('paypal')" tabindex="0" role="radio" aria-checked="false" aria-label="PayPal">
                                         <input type="radio" name="payment_method" id="paypal" value="paypal">
                                         <label for="paypal">
                                             <i class="fab fa-paypal me-2"></i>PayPal
                                         </label>
                                     </div>
                                     
-                                    <div class="payment-method" onclick="selectPayment('cash')">
+                                    <div class="payment-method" onclick="selectPayment('cash')" tabindex="0" role="radio" aria-checked="false" aria-label="Pay at Hotel">
                                         <input type="radio" name="payment_method" id="cash" value="cash">
                                         <label for="cash">
                                             <i class="fas fa-money-bill-wave me-2"></i>Pay at Hotel
                                         </label>
                                     </div>
                                     
+                                    <!-- Coupon Code -->
+                                    <div class="mb-3">
+                                        <label for="coupon_code" class="form-label">Coupon Code</label>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="coupon_code" name="coupon_code" value="<?php echo set_value('coupon_code'); ?>" placeholder="Enter coupon code" aria-describedby="couponCodeError">
+                                            <?php if (form_error('coupon_code')): ?>
+                                                <span id="couponCodeError" class="error-message" role="alert"><?= form_error('coupon_code') ?></span>
+                                            <?php endif; ?>
+                                            <button type="button" class="btn btn-outline-primary" id="apply-coupon-btn">Apply</button>
+                                        </div>
+                                        <div id="coupon-message" class="mt-2"></div>
+                                    </div>
+                                    
                                     <!-- Terms and Conditions -->
                                     <div class="terms-checkbox mt-4">
-                                        <input type="checkbox" id="terms_accepted" name="terms_accepted" required>
+                                        <input type="checkbox" id="terms_accepted" name="terms_accepted" aria-required="true">
                                         <label for="terms_accepted">
                                             I agree to the <a href="#" target="_blank">Terms and Conditions</a> and 
                                             <a href="#" target="_blank">Privacy Policy</a>. I understand that this booking is subject to our cancellation policy.
@@ -325,7 +362,12 @@
                                             <span>Taxes & Fees</span>
                                             <span>$<?php echo number_format(($room->price_per_night * $search_data['nights']) * 0.15); ?></span>
                                         </div>
-                                        
+                                        <?php if (!empty($applied_coupon)): ?>
+                                           <div class="price-item text-success">
+                                               <span>Coupon Discount (<?php echo htmlspecialchars($applied_coupon['code']); ?>)</span>
+                                               <span>- $<?php echo number_format($applied_coupon['discount'], 2); ?></span>
+                                           </div>
+                                       <?php endif; ?>
                                         <div class="price-item">
                                             <span>Total Amount</span>
                                             <span>$<?php echo number_format($total_amount); ?></span>

@@ -1,5 +1,7 @@
 <?php $CI =& get_instance(); ?>
 <?php $this->load->view('header'); ?>
+<body>
+  <a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
 <div class="container py-5">
   <a href="<?php echo base_url('staff/bookings'); ?>" class="btn btn-secondary mb-3"><i class="fas fa-arrow-left"></i> Back to Bookings</a>
   <div class="row">
@@ -42,7 +44,44 @@
     </div>
   </div>
 </div>
+<main id="main-content" role="main">
+<section class="booking-details" aria-label="Booking Details" role="region">
+<a href="<?= site_url('staff/edit_booking/'.$booking->id) ?>" class="btn btn-warning" aria-label="Edit booking <?= $booking->id ?>">Edit Booking</a>
+<a href="<?= site_url('staff/cancel_booking/'.$booking->id) ?>" class="btn btn-danger" aria-label="Cancel booking <?= $booking->id ?>" onclick="return confirm('Are you sure you want to cancel this booking?');">Cancel Booking</a>
+<?php if ($this->session->flashdata('success')): ?>
+  <div class="alert alert-success" role="alert" aria-live="polite">
+    <?= $this->session->flashdata('success') ?>
+  </div>
+<?php endif; ?>
+<?php if ($this->session->flashdata('error')): ?>
+  <div class="alert alert-danger" role="alert" aria-live="assertive">
+    <?= $this->session->flashdata('error') ?>
+  </div>
+<?php endif; ?>
+</section>
+</main>
 <style>
 .card { border-radius: 12px; box-shadow: 0 2px 16px rgba(0,0,0,0.06); border: 1px solid #e0e0e0; }
+.visually-hidden-focusable.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 1000;
+}
+.visually-hidden-focusable.skip-link:focus {
+  left: 10px;
+  top: 10px;
+  width: auto;
+  height: auto;
+  background: #0072ff;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 4px;
+  outline: 2px solid #fff;
+  text-decoration: none;
+}
 </style>
 <?php $this->load->view('footer'); ?> 

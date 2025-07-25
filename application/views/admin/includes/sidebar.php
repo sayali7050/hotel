@@ -19,7 +19,7 @@
         </div>
     </div>
     
-    <nav class="sidebar-nav p-0">
+    <nav class="sidebar-nav p-0" role="navigation" aria-label="Admin sidebar navigation">
         <ul class="nav flex-column">
             <li class="nav-item">
                 <a class="nav-link <?php echo $this->uri->segment(2) == 'dashboard' ? 'active bg-primary' : ''; ?>" 
@@ -110,6 +110,11 @@
 .sidebar-nav .nav-link i {
     width: 20px;
     text-align: center;
+}
+
+.sidebar a:focus {
+  outline: 2px solid #0072ff;
+  background: #e6f0ff;
 }
 
 @media (max-width: 768px) {

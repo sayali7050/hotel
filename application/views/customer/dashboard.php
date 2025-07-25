@@ -1,11 +1,12 @@
 <?php $CI =& get_instance(); ?>
 <?php $this->load->view('header'); ?>
+<a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
 <div class="container py-5">
     <div class="row">
         <div class="col-md-3 mb-4 mb-md-0">
             <?php $this->load->view('customer/sidebar'); ?>
         </div>
-        <div class="col-md-9" style="border-left: 1px solid #e0e0e0; min-height: 80vh;">
+        <div class="col-md-9" style="border-left: 1px solid #e0e0e0; min-height: 80vh;" role="main" id="main-content">
             <div class="welcome-card mb-4">
                 <div class="row align-items-center">
                     <div class="col-md-8">
@@ -33,10 +34,10 @@
             <?php endif; ?>
             <div class="row mb-4">
                 <div class="col-md-4 mb-3">
-                    <div class="stat-card">
+                    <div class="stat-card" tabindex="0" role="region" aria-label="Total Bookings">
                         <div class="d-flex align-items-center">
                             <div class="stat-icon bg-primary me-3">
-                                <i class="fas fa-calendar-check"></i>
+                                <i class="fas fa-calendar-check" aria-hidden="true"></i>
                             </div>
                             <div>
                                 <h3 class="mb-0"><?php echo $total_bookings; ?></h3>
@@ -46,10 +47,10 @@
                     </div>
                 </div>
                 <div class="col-md-4 mb-3">
-                    <div class="stat-card">
+                    <div class="stat-card" tabindex="0" role="region" aria-label="Active Bookings">
                         <div class="d-flex align-items-center">
                             <div class="stat-icon bg-success me-3">
-                                <i class="fas fa-check-circle"></i>
+                                <i class="fas fa-check-circle" aria-hidden="true"></i>
                             </div>
                             <div>
                                 <h3 class="mb-0"><?php echo $active_bookings; ?></h3>
@@ -59,10 +60,10 @@
                     </div>
                 </div>
                 <div class="col-md-4 mb-3">
-                    <div class="stat-card">
+                    <div class="stat-card" tabindex="0" role="region" aria-label="Completed Bookings">
                         <div class="d-flex align-items-center">
                             <div class="stat-icon bg-info me-3">
-                                <i class="fas fa-history"></i>
+                                <i class="fas fa-history" aria-hidden="true"></i>
                             </div>
                             <div>
                                 <h3 class="mb-0"><?php echo $completed_bookings; ?></h3>
@@ -71,36 +72,49 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-md-4 mb-3">
+                    <div class="stat-card bg-warning bg-gradient text-white" tabindex="0" role="region" aria-label="Loyalty Points">
+                        <div class="d-flex align-items-center">
+                            <div class="stat-icon bg-white text-warning me-3">
+                                <i class="fas fa-gem" aria-hidden="true"></i>
+                            </div>
+                            <div>
+                                <h3 class="mb-0"><?php echo (int)($user->loyalty_points ?? 0); ?></h3>
+                                <p class="mb-0">Loyalty Points</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="row mb-4">
                 <div class="col-12">
-                    <div class="card">
+                    <div class="card" role="region" aria-label="Quick Actions">
                         <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
+                            <h5 class="mb-0"><i class="fas fa-bolt" aria-hidden="true"></i> Quick Actions</h5>
                         </div>
                         <div class="card-body">
                             <div class="row">
                                 <div class="col-md-3 mb-3">
-                                    <a href="<?php echo base_url('customer/rooms'); ?>" class="btn btn-outline-primary w-100">
-                                        <i class="fas fa-bed"></i><br>
+                                    <a href="<?php echo base_url('customer/rooms'); ?>" class="btn btn-outline-primary w-100" role="button">
+                                        <i class="fas fa-bed" aria-hidden="true"></i><br>
                                         Browse Rooms
                                     </a>
                                 </div>
                                 <div class="col-md-3 mb-3">
-                                    <a href="<?php echo base_url('customer/book-room'); ?>" class="btn btn-outline-success w-100">
-                                        <i class="fas fa-calendar-plus"></i><br>
+                                    <a href="<?php echo base_url('customer/book-room'); ?>" class="btn btn-outline-success w-100" role="button">
+                                        <i class="fas fa-calendar-plus" aria-hidden="true"></i><br>
                                         Book New Room
                                     </a>
                                 </div>
                                 <div class="col-md-3 mb-3">
-                                    <a href="<?php echo base_url('customer/my-bookings'); ?>" class="btn btn-outline-info w-100">
-                                        <i class="fas fa-calendar-check"></i><br>
+                                    <a href="<?php echo base_url('customer/my-bookings'); ?>" class="btn btn-outline-info w-100" role="button">
+                                        <i class="fas fa-calendar-check" aria-hidden="true"></i><br>
                                         My Bookings
                                     </a>
                                 </div>
                                 <div class="col-md-3 mb-3">
-                                    <a href="<?php echo base_url('customer/profile'); ?>" class="btn btn-outline-warning w-100">
-                                        <i class="fas fa-user"></i><br>
+                                    <a href="<?php echo base_url('customer/profile'); ?>" class="btn btn-outline-warning w-100" role="button">
+                                        <i class="fas fa-user" aria-hidden="true"></i><br>
                                         My Profile
                                     </a>
                                 </div>
@@ -176,4 +190,27 @@
         </div>
     </div>
 </div>
-<?php $this->load->view('footer'); ?> 
+<?php $this->load->view('footer'); ?>
+<style>
+.visually-hidden-focusable.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 1000;
+}
+.visually-hidden-focusable.skip-link:focus {
+  left: 10px;
+  top: 10px;
+  width: auto;
+  height: auto;
+  background: #0072ff;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 4px;
+  outline: 2px solid #fff;
+  text-decoration: none;
+}
+</style> 

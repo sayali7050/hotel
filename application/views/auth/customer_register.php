@@ -30,9 +30,31 @@
             background: linear-gradient(90deg, #0072ff 0%, #00c97b 100%);
             filter: brightness(0.95);
         }
+        .visually-hidden-focusable.skip-link {
+            position: absolute;
+            left: -9999px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            z-index: 1000;
+        }
+        .visually-hidden-focusable.skip-link:focus {
+            left: 10px;
+            top: 10px;
+            width: auto;
+            height: auto;
+            background: #0072ff;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            outline: 2px solid #fff;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
+    <a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-8 col-lg-6">
@@ -52,14 +74,18 @@
                         </div>
                     <?php endif; ?>
 
-                    <?php if($this->session->flashdata('error')): ?>
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <i class="fas fa-exclamation-triangle"></i> <?php echo $this->session->flashdata('error'); ?>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    <?php if ($this->session->flashdata('success')): ?>
+                        <div class="alert alert-success" role="alert" aria-live="polite">
+                            <?= $this->session->flashdata('success') ?>
+                        </div>
+                    <?php endif; ?>
+                    <?php if ($this->session->flashdata('error')): ?>
+                        <div class="alert alert-danger" role="alert" aria-live="assertive">
+                            <?= $this->session->flashdata('error') ?>
                         </div>
                     <?php endif; ?>
 
-                    <?php echo form_open('auth/customer_register'); ?>
+                    <form action="<?= site_url('auth/customer_register') ?>" method="post" aria-label="Register a new customer account">
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="first_name" class="form-label">First Name *</label>
@@ -116,7 +142,7 @@
                                 <a href="<?php echo base_url('auth/customer_login'); ?>" class="text-decoration-none">Login here</a>
                             </p>
                         </div>
-                    <?php echo form_close(); ?>
+                    </form>
                 </div>
             </div>
         </div>

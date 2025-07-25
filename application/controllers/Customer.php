@@ -7,6 +7,7 @@ class Customer extends CI_Controller {
         parent::__construct();
         $this->load->model(['User_model', 'Room_model', 'Booking_model']);
         $this->load->library(['form_validation', 'session']);
+        $this->load->helper('notification');
         
         // Check if user is logged in and is customer
         if (!$this->session->userdata('logged_in') || $this->session->userdata('role') != 'customer') {
@@ -89,6 +90,18 @@ class Customer extends CI_Controller {
             ];
             
             if ($this->Booking_model->create_booking($booking_data)) {
+                // Send notification to customer
+                send_booking_notification(
+                    $this->session->userdata('email'),
+                    'Booking Created',
+                    'Your booking has been created and is pending confirmation.'
+                );
+                // Send notification to admin (stub: replace with real admin email)
+                send_booking_notification(
+                    'admin@hotel.com',
+                    'New Booking Created',
+                    'A new booking has been created by customer ID: ' . $this->session->userdata('user_id')
+                );
                 $this->session->set_flashdata('success', 'Booking created successfully! Please wait for confirmation.');
                 redirect('customer/my_bookings');
             } else {
@@ -133,12 +146,88 @@ class Customer extends CI_Controller {
         }
         
         if ($this->Booking_model->update_booking_status($id, 'cancelled')) {
+            // Send notification to customer
+            send_booking_notification(
+                $this->session->userdata('email'),
+                'Booking Cancelled',
+                'Your booking has been cancelled.'
+            );
+            // Send notification to admin (stub: replace with real admin email)
+            send_booking_notification(
+                'admin@hotel.com',
+                'Booking Cancelled',
+                'Booking ID ' . $id . ' has been cancelled by customer ID: ' . $this->session->userdata('user_id')
+            );
             $this->session->set_flashdata('success', 'Booking cancelled successfully');
         } else {
             $this->session->set_flashdata('error', 'Failed to cancel booking');
         }
         
         redirect('customer/my_bookings');
+    }
+    
+    // Edit booking
+    public function edit_booking($id) {
+        $user_id = $this->session->userdata('user_id');
+        $booking = $this->Booking_model->get_booking_by_id($id);
+        if (!$booking || $booking->user_id != $user_id) {
+            $this->session->set_flashdata('error', 'Invalid booking');
+            redirect('customer/my_bookings');
+        }
+        if (in_array($booking->status, ['checked_in', 'checked_out', 'cancelled'])) {
+            $this->session->set_flashdata('error', 'This booking cannot be modified');
+            redirect('customer/my_bookings');
+        }
+        $data['booking'] = $booking;
+        $data['rooms'] = $this->Room_model->get_available_rooms();
+        $this->form_validation->set_rules('room_id', 'Room', 'required');
+        $this->form_validation->set_rules('check_in_date', 'Check-in Date', 'required');
+        $this->form_validation->set_rules('check_out_date', 'Check-out Date', 'required');
+        $this->form_validation->set_rules('special_requests', 'Special Requests', 'max_length[500]');
+        if ($this->form_validation->run() == FALSE) {
+            $this->load->view('customer/edit_booking', $data);
+        } else {
+            $room_id = $this->input->post('room_id');
+            $check_in = $this->input->post('check_in_date');
+            $check_out = $this->input->post('check_out_date');
+            // Check if room is available for the new dates (excluding this booking)
+            if (!$this->Booking_model->is_room_available($room_id, $check_in, $check_out, $id)) {
+                $this->session->set_flashdata('error', 'Room is not available for the selected dates');
+                redirect('customer/edit_booking/' . $id);
+            }
+            $room = $this->Room_model->get_room_by_id($room_id);
+            $check_in_date = new DateTime($check_in);
+            $check_out_date = new DateTime($check_out);
+            $nights = $check_in_date->diff($check_out_date)->days;
+            $total_amount = $room->price_per_night * $nights;
+            $update_data = [
+                'room_id' => $room_id,
+                'check_in_date' => $check_in,
+                'check_out_date' => $check_out,
+                'total_amount' => $total_amount,
+                'special_requests' => $this->input->post('special_requests'),
+                'status' => 'pending' // Reset to pending for re-approval if needed
+            ];
+            if ($this->Booking_model->update_booking($id, $update_data)) {
+                // Send notification to customer
+                send_booking_notification(
+                    $this->session->userdata('email'),
+                    'Booking Modified',
+                    'Your booking has been modified and is pending confirmation.'
+                );
+                // Send notification to admin (stub: replace with real admin email)
+                send_booking_notification(
+                    'admin@hotel.com',
+                    'Booking Modified',
+                    'Booking ID ' . $id . ' has been modified by customer ID: ' . $this->session->userdata('user_id')
+                );
+                $this->session->set_flashdata('success', 'Booking updated successfully!');
+                redirect('customer/my_bookings');
+            } else {
+                $this->session->set_flashdata('error', 'Failed to update booking');
+                redirect('customer/edit_booking/' . $id);
+            }
+        }
     }
     
     // Profile management
@@ -159,7 +248,8 @@ class Customer extends CI_Controller {
                 'last_name' => $this->input->post('last_name'),
                 'email' => $this->input->post('email'),
                 'phone' => $this->input->post('phone'),
-                'address' => $this->input->post('address')
+                'address' => $this->input->post('address'),
+                'preferences' => $this->input->post('preferences')
             ];
             
             if ($this->User_model->update_user($user_id, $update_data)) {
@@ -224,5 +314,80 @@ class Customer extends CI_Controller {
         $data['room_types'] = $this->Room_model->get_room_types();
         
         $this->load->view('customer/search_rooms', $data);
+    }
+
+    // Download booking receipt
+    public function download_receipt($id) {
+        $user_id = $this->session->userdata('user_id');
+        $booking = $this->Booking_model->get_booking_by_id($id);
+        if (!$booking || $booking->user_id != $user_id) {
+            show_error('You do not have permission to access this receipt.', 403);
+        }
+        $data['booking'] = $booking;
+        $this->load->view('customer/booking_receipt', $data);
+    }
+
+    // Submit a review for a completed booking
+    public function submit_review($booking_id) {
+        $user_id = $this->session->userdata('user_id');
+        $this->load->model('Review_model');
+        $booking = $this->Booking_model->get_booking_by_id($booking_id);
+        if (!$booking || $booking->user_id != $user_id || $booking->status != 'checked_out') {
+            $this->session->set_flashdata('error', 'You can only review completed bookings.');
+            redirect('customer/view_booking/' . $booking_id);
+        }
+        // Prevent duplicate reviews
+        $existing_review = $this->Review_model->get_review_by_booking($booking_id);
+        if ($existing_review) {
+            $this->session->set_flashdata('error', 'You have already reviewed this booking.');
+            redirect('customer/view_booking/' . $booking_id);
+        }
+        $this->form_validation->set_rules('rating', 'Rating', 'required|integer|greater_than[0]|less_than_equal_to[5]');
+        $this->form_validation->set_rules('review_text', 'Review', 'max_length[1000]');
+        if ($this->form_validation->run() == FALSE) {
+            $data['booking'] = $booking;
+            $data['show_review_form'] = true;
+            $this->load->view('customer/view_booking', $data);
+        } else {
+            $review_data = [
+                'user_id' => $user_id,
+                'room_id' => $booking->room_id,
+                'booking_id' => $booking_id,
+                'rating' => $this->input->post('rating'),
+                'review_text' => $this->input->post('review_text'),
+                'created_at' => date('Y-m-d H:i:s')
+            ];
+            $this->Review_model->add_review($review_data);
+            $this->session->set_flashdata('success', 'Thank you for your review!');
+            redirect('customer/view_booking/' . $booking_id);
+        }
+    }
+
+    // Export user data (GDPR)
+    public function export_my_data() {
+        $user_id = $this->session->userdata('user_id');
+        $user = $this->User_model->get_user_by_id($user_id);
+        $bookings = $this->Booking_model->get_bookings_by_user($user_id);
+        $this->load->model('Review_model');
+        $reviews = $this->Review_model->get_reviews_by_user($user_id);
+        $data = [
+            'profile' => $user,
+            'bookings' => $bookings,
+            'reviews' => $reviews
+        ];
+        header('Content-Type: application/json');
+        header('Content-Disposition: attachment; filename="my_data_' . date('Ymd_His') . '.json"');
+        echo json_encode($data, JSON_PRETTY_PRINT);
+        exit;
+    }
+
+    // Request account deletion (GDPR)
+    public function request_account_deletion() {
+        $user_id = $this->session->userdata('user_id');
+        // Mark user as pending deletion
+        $this->User_model->update_user($user_id, ['status' => 'pending_deletion']);
+        // Notify admin (for now, just set a flash message)
+        $this->session->set_flashdata('success', 'Your account deletion request has been received. An administrator will process your request soon.');
+        redirect('customer/profile');
     }
 } 

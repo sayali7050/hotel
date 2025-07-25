@@ -6,31 +6,65 @@ class Admin extends CI_Controller {
     public function __construct() {
         parent::__construct();
         $this->load->model(['User_model', 'Room_model', 'Booking_model']);
+        $this->load->model('Audit_log_model');
+        $this->load->helper('notification');
         $this->load->library(['form_validation', 'session']);
         
         // Check if user is logged in and is admin
         if (!$this->session->userdata('logged_in') || $this->session->userdata('role') != 'admin') {
             redirect('auth/admin_login');
         }
+        $this->admin_permissions = $this->User_model->get_permissions($this->session->userdata('user_id'));
+    }
+    
+    // Permission check helper
+    private function require_permission($perm) {
+        if (empty($this->admin_permissions[$perm])) {
+            $this->session->set_flashdata('error', 'You do not have permission to access this module.');
+            redirect('admin/dashboard');
+            exit;
+        }
     }
     
     // Admin dashboard
     public function dashboard() {
-        $data['total_users'] = $this->User_model->get_user_count_by_role('customer');
-        $data['total_staff'] = $this->User_model->get_user_count_by_role('staff');
-        $data['total_rooms'] = $this->db->count_all('rooms');
-        $data['available_rooms'] = $this->Room_model->get_room_count_by_status('available');
-        $data['total_bookings'] = $this->db->count_all('bookings');
-        $data['pending_bookings'] = $this->Booking_model->get_booking_count_by_status('pending');
-        $data['total_revenue'] = $this->Booking_model->get_total_revenue();
-        $data['recent_bookings'] = $this->Booking_model->get_recent_bookings(5);
-        $data['recent_users'] = $this->User_model->get_recent_users(5);
-        
+        $this->require_permission('manage_bookings');
+        $this->load->model('Booking_model');
+        $this->load->model('Room_model');
+        // Occupancy: last 7 days
+        $labels = [];
+        $values = [];
+        $total_rooms = count($this->Room_model->get_all_rooms());
+        for ($i = 6; $i >= 0; $i--) {
+            $date = date('Y-m-d', strtotime("-$i days"));
+            $labels[] = date('M d', strtotime($date));
+            $occupied = $this->Booking_model->get_occupied_count_on($date);
+            $values[] = $total_rooms > 0 ? round(($occupied / $total_rooms) * 100, 1) : 0;
+        }
+        $data['occupancy_data'] = ['labels' => $labels, 'values' => $values];
+        // Revenue: last 7 days
+        $labels = [];
+        $values = [];
+        for ($i = 6; $i >= 0; $i--) {
+            $date = date('Y-m-d', strtotime("-$i days"));
+            $labels[] = date('M d', strtotime($date));
+            $values[] = $this->Booking_model->get_revenue_on($date);
+        }
+        $data['revenue_data'] = ['labels' => $labels, 'values' => $values];
+        // Booking status breakdown
+        $statuses = ['pending', 'confirmed', 'checked_in', 'checked_out', 'cancelled'];
+        $labels = array_map('ucfirst', str_replace('_', ' ', $statuses));
+        $values = [];
+        foreach ($statuses as $status) {
+            $values[] = $this->Booking_model->get_booking_count_by_status($status);
+        }
+        $data['status_data'] = ['labels' => $labels, 'values' => $values];
         $this->load->view('admin/dashboard', $data);
     }
     
     // User management
     public function users() {
+        $this->require_permission('manage_users');
         $data['customers'] = $this->User_model->get_users_by_role('customer');
         $data['staff'] = $this->User_model->get_staff_with_assignments();
         
@@ -39,6 +73,7 @@ class Admin extends CI_Controller {
     
     // Add staff
     public function add_staff() {
+        $this->require_permission('manage_users');
         $this->form_validation->set_rules('username', 'Username', 'required|is_unique[users.username]');
         $this->form_validation->set_rules('email', 'Email', 'required|valid_email|is_unique[users.email]');
         $this->form_validation->set_rules('password', 'Password', 'required|min_length[6]');
@@ -87,6 +122,7 @@ class Admin extends CI_Controller {
     
     // Edit user
     public function edit_user($id) {
+        $this->require_permission('manage_users');
         $data['user'] = $this->User_model->get_user_by_id($id);
         
         if (!$data['user']) {
@@ -111,6 +147,14 @@ class Admin extends CI_Controller {
             ];
             
             if ($this->User_model->update_user($id, $update_data)) {
+                $this->Audit_log_model->add_log(
+                    $this->session->userdata('user_id'),
+                    'admin',
+                    'edit_user',
+                    'user',
+                    $id,
+                    json_encode($update_data)
+                );
                 $this->session->set_flashdata('success', 'User updated successfully');
             } else {
                 $this->session->set_flashdata('error', 'Failed to update user');
@@ -121,7 +165,16 @@ class Admin extends CI_Controller {
     
     // Delete user
     public function delete_user($id) {
+        $this->require_permission('manage_users');
         if ($this->User_model->delete_user($id)) {
+            $this->Audit_log_model->add_log(
+                $this->session->userdata('user_id'),
+                'admin',
+                'delete_user',
+                'user',
+                $id,
+                null
+            );
             $this->session->set_flashdata('success', 'User deleted successfully');
         } else {
             $this->session->set_flashdata('error', 'Failed to delete user');
@@ -129,14 +182,90 @@ class Admin extends CI_Controller {
         redirect('admin/users');
     }
     
+    // Bulk action for users
+    public function bulk_action_users() {
+        $this->require_permission('manage_users');
+        $action = $this->input->post('bulk_action');
+        $user_ids = $this->input->post('user_ids');
+        if (!$action || !$user_ids || !is_array($user_ids)) {
+            $this->session->set_flashdata('error', 'No users selected or invalid action.');
+            redirect('admin/users');
+        }
+        $count = 0;
+        foreach ($user_ids as $id) {
+            if ($action == 'delete') {
+                if ($this->User_model->delete_user($id)) {
+                    $this->Audit_log_model->add_log(
+                        $this->session->userdata('user_id'),
+                        'admin',
+                        'bulk_delete_user',
+                        'user',
+                        $id,
+                        null
+                    );
+                    $count++;
+                }
+            } elseif (in_array($action, ['active', 'inactive', 'suspended'])) {
+                if ($this->User_model->update_user($id, ['status' => $action])) {
+                    $this->Audit_log_model->add_log(
+                        $this->session->userdata('user_id'),
+                        'admin',
+                        'bulk_update_user_status',
+                        'user',
+                        $id,
+                        json_encode(['status' => $action])
+                    );
+                    $count++;
+                }
+            }
+        }
+        $this->session->set_flashdata('success', "Bulk action applied to $count users.");
+        redirect('admin/users');
+    }
+    
     // Room management
     public function rooms() {
+        $this->require_permission('manage_rooms');
         $data['rooms'] = $this->Room_model->get_all_rooms();
+        // Get room types for inventory management
+        $data['room_types'] = $this->Room_model->get_room_types();
+        // Get inventory for last 7 days
+        $this->db->order_by('date DESC');
+        $this->db->where('date >=', date('Y-m-d', strtotime('-7 days')));
+        $data['room_inventory'] = $this->db->get('room_inventory')->result();
         $this->load->view('admin/rooms', $data);
+    }
+
+    // Update room inventory (admin)
+    public function update_room_inventory() {
+        $this->require_permission('manage_rooms');
+        $room_type = $this->input->post('room_type');
+        $date = $this->input->post('date');
+        $total_rooms = (int)$this->input->post('total_rooms');
+        if (!$room_type || !$date) {
+            $this->session->set_flashdata('error', 'Room type and date are required.');
+            redirect('admin/rooms');
+        }
+        // Upsert inventory record
+        $existing = $this->db->get_where('room_inventory', ['room_type' => $room_type, 'date' => $date])->row();
+        if ($existing) {
+            $this->db->where('id', $existing->id);
+            $this->db->update('room_inventory', ['total_rooms' => $total_rooms]);
+        } else {
+            $this->db->insert('room_inventory', [
+                'room_type' => $room_type,
+                'date' => $date,
+                'total_rooms' => $total_rooms,
+                'booked_rooms' => 0
+            ]);
+        }
+        $this->session->set_flashdata('success', 'Room inventory updated.');
+        redirect('admin/rooms');
     }
     
     // Add room
     public function add_room() {
+        $this->require_permission('manage_rooms');
         $this->form_validation->set_rules('room_number', 'Room Number', 'required|is_unique[rooms.room_number]');
         $this->form_validation->set_rules('room_type', 'Room Type', 'required');
         $this->form_validation->set_rules('capacity', 'Capacity', 'required|numeric');
@@ -156,6 +285,15 @@ class Admin extends CI_Controller {
             ];
             
             if ($this->Room_model->add_room($data)) {
+                $room_id = $this->db->insert_id();
+                $this->Audit_log_model->add_log(
+                    $this->session->userdata('user_id'),
+                    'admin',
+                    'add_room',
+                    'room',
+                    $room_id,
+                    json_encode($data)
+                );
                 $this->session->set_flashdata('success', 'Room added successfully');
                 redirect('admin/rooms');
             } else {
@@ -167,6 +305,7 @@ class Admin extends CI_Controller {
     
     // Edit room
     public function edit_room($id) {
+        $this->require_permission('manage_rooms');
         $data['room'] = $this->Room_model->get_room_by_id($id);
         
         if (!$data['room']) {
@@ -190,6 +329,14 @@ class Admin extends CI_Controller {
             ];
             
             if ($this->Room_model->update_room($id, $update_data)) {
+                $this->Audit_log_model->add_log(
+                    $this->session->userdata('user_id'),
+                    'admin',
+                    'edit_room',
+                    'room',
+                    $id,
+                    json_encode($update_data)
+                );
                 $this->session->set_flashdata('success', 'Room updated successfully');
             } else {
                 $this->session->set_flashdata('error', 'Failed to update room');
@@ -200,7 +347,16 @@ class Admin extends CI_Controller {
     
     // Delete room
     public function delete_room($id) {
+        $this->require_permission('manage_rooms');
         if ($this->Room_model->delete_room($id)) {
+            $this->Audit_log_model->add_log(
+                $this->session->userdata('user_id'),
+                'admin',
+                'delete_room',
+                'room',
+                $id,
+                null
+            );
             $this->session->set_flashdata('success', 'Room deleted successfully');
         } else {
             $this->session->set_flashdata('error', 'Failed to delete room');
@@ -208,15 +364,117 @@ class Admin extends CI_Controller {
         redirect('admin/rooms');
     }
     
+    // Bulk action for rooms
+    public function bulk_action_rooms() {
+        $this->require_permission('manage_rooms');
+        $action = $this->input->post('bulk_action');
+        $room_ids = $this->input->post('room_ids');
+        if (!$action || !$room_ids || !is_array($room_ids)) {
+            $this->session->set_flashdata('error', 'No rooms selected or invalid action.');
+            redirect('admin/rooms');
+        }
+        $count = 0;
+        foreach ($room_ids as $id) {
+            if ($action == 'delete') {
+                if ($this->Room_model->delete_room($id)) {
+                    $this->Audit_log_model->add_log(
+                        $this->session->userdata('user_id'),
+                        'admin',
+                        'bulk_delete_room',
+                        'room',
+                        $id,
+                        null
+                    );
+                    $count++;
+                }
+            } elseif ($action == 'available' || $action == 'maintenance') {
+                if ($this->Room_model->update_room_status($id, $action)) {
+                    $this->Audit_log_model->add_log(
+                        $this->session->userdata('user_id'),
+                        'admin',
+                        'bulk_update_room_status',
+                        'room',
+                        $id,
+                        json_encode(['status' => $action])
+                    );
+                    $count++;
+                }
+            }
+        }
+        $this->session->set_flashdata('success', "Bulk action applied to $count rooms.");
+        redirect('admin/rooms');
+    }
+    
     // Booking management
     public function bookings() {
+        $this->require_permission('manage_bookings');
         $data['bookings'] = $this->Booking_model->get_all_bookings();
         $this->load->view('admin/bookings', $data);
     }
     
+    // Bulk action for bookings
+    public function bulk_action_bookings() {
+        $this->require_permission('manage_bookings');
+        $action = $this->input->post('bulk_action');
+        $booking_ids = $this->input->post('booking_ids');
+        if (!$action || !$booking_ids || !is_array($booking_ids)) {
+            $this->session->set_flashdata('error', 'No bookings selected or invalid action.');
+            redirect('admin/bookings');
+        }
+        $count = 0;
+        foreach ($booking_ids as $id) {
+            if ($action == 'delete') {
+                if ($this->Booking_model->delete_booking($id)) {
+                    $this->Audit_log_model->add_log(
+                        $this->session->userdata('user_id'),
+                        'admin',
+                        'bulk_delete_booking',
+                        'booking',
+                        $id,
+                        null
+                    );
+                    $count++;
+                }
+            } elseif ($action == 'cancel' || $action == 'confirm') {
+                $status = $action == 'cancel' ? 'cancelled' : 'confirmed';
+                if ($this->Booking_model->update_booking_status($id, $status)) {
+                    $this->Audit_log_model->add_log(
+                        $this->session->userdata('user_id'),
+                        'admin',
+                        'bulk_update_booking_status',
+                        'booking',
+                        $id,
+                        json_encode(['status' => $status])
+                    );
+                    $count++;
+                }
+            }
+        }
+        $this->session->set_flashdata('success', "Bulk action applied to $count bookings.");
+        redirect('admin/bookings');
+    }
+    
     // Update booking status
     public function update_booking_status($id, $status) {
+        $this->require_permission('manage_bookings');
         if ($this->Booking_model->update_booking_status($id, $status)) {
+            // Notify customer
+            $booking = $this->Booking_model->get_booking_by_id($id);
+            if ($booking && isset($booking->guest_email)) {
+                send_booking_notification(
+                    $booking->guest_email,
+                    'Booking Status Updated',
+                    'Your booking status has been updated to: ' . ucfirst($status)
+                );
+            }
+            $this->Audit_log_model->add_log(
+                $this->session->userdata('user_id'),
+                'admin',
+                'update_booking_status',
+                'booking',
+                $id,
+                json_encode(['status' => $status])
+            );
             $this->session->set_flashdata('success', 'Booking status updated successfully');
         } else {
             $this->session->set_flashdata('error', 'Failed to update booking status');
@@ -237,6 +495,7 @@ class Admin extends CI_Controller {
     
     // Edit booking
     public function edit_booking($id) {
+        $this->require_permission('manage_bookings');
         $data['booking'] = $this->Booking_model->get_booking_by_id($id);
         $data['rooms'] = $this->Room_model->get_all_rooms();
         
@@ -268,6 +527,23 @@ class Admin extends CI_Controller {
             $update_data['total_amount'] = $room->price_per_night * $nights;
             
             if ($this->Booking_model->update_booking($id, $update_data)) {
+                // Notify customer
+                $booking = $this->Booking_model->get_booking_by_id($id);
+                if ($booking && isset($booking->guest_email)) {
+                    send_booking_notification(
+                        $booking->guest_email,
+                        'Booking Modified by Admin',
+                        'Your booking has been modified by the admin.'
+                    );
+                }
+                $this->Audit_log_model->add_log(
+                    $this->session->userdata('user_id'),
+                    'admin',
+                    'edit_booking',
+                    'booking',
+                    $id,
+                    json_encode($update_data)
+                );
                 $this->session->set_flashdata('success', 'Booking updated successfully');
             } else {
                 $this->session->set_flashdata('error', 'Failed to update booking');
@@ -278,16 +554,353 @@ class Admin extends CI_Controller {
     
     // Reports
     public function reports() {
-        $data['total_revenue'] = $this->Booking_model->get_total_revenue();
-        $data['monthly_revenue'] = $this->Booking_model->get_monthly_revenue(date('Y'), date('m'));
-        $data['booking_stats'] = [
-            'pending' => $this->Booking_model->get_booking_count_by_status('pending'),
-            'confirmed' => $this->Booking_model->get_booking_count_by_status('confirmed'),
-            'checked_in' => $this->Booking_model->get_booking_count_by_status('checked_in'),
-            'checked_out' => $this->Booking_model->get_booking_count_by_status('checked_out'),
-            'cancelled' => $this->Booking_model->get_booking_count_by_status('cancelled')
+        // Occupancy and revenue for last 30 days
+        $occupancy = [];
+        $revenue = [];
+        $today = strtotime(date('Y-m-d'));
+        $room_count = $this->db->count_all('rooms');
+        for ($i = 29; $i >= 0; $i--) {
+            $date = date('Y-m-d', strtotime("-$i days", $today));
+            $occupied = $this->db->where_in('status', ['confirmed', 'checked_in'])
+                ->where('check_in_date <=', $date)
+                ->where('check_out_date >', $date)
+                ->count_all_results('bookings');
+            $day_revenue = $this->db->select_sum('total_amount')
+                ->where_in('status', ['confirmed', 'checked_in', 'checked_out'])
+                ->where('check_in_date <=', $date)
+                ->where('check_out_date >', $date)
+                ->get('bookings')->row()->total_amount;
+            $occupancy[] = ['date' => $date, 'occupied' => $occupied, 'total' => $room_count];
+            $revenue[] = ['date' => $date, 'revenue' => $day_revenue ? $day_revenue : 0];
+        }
+        // Top guests (all time)
+        $top_guests = $this->db->select('users.*, COUNT(bookings.id) as total_bookings, SUM(bookings.total_amount) as total_spend')
+            ->from('users')
+            ->join('bookings', 'users.id = bookings.user_id', 'left')
+            ->where('users.role', 'customer')
+            ->group_by('users.id')
+            ->order_by('total_spend', 'DESC')
+            ->limit(10)
+            ->get()->result();
+        $this->load->view('admin/reports', [
+            'occupancy' => $occupancy,
+            'revenue' => $revenue,
+            'top_guests' => $top_guests
+        ]);
+    }
+
+    public function export_occupancy_csv() {
+        $room_count = $this->db->count_all('rooms');
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=occupancy_report_' . date('Ymd_His') . '.csv');
+        $output = fopen('php://output', 'w');
+        fputcsv($output, ['Date', 'Occupied Rooms', 'Total Rooms', 'Occupancy %']);
+        $today = strtotime(date('Y-m-d'));
+        for ($i = 29; $i >= 0; $i--) {
+            $date = date('Y-m-d', strtotime("-$i days", $today));
+            $occupied = $this->db->where_in('status', ['confirmed', 'checked_in'])
+                ->where('check_in_date <=', $date)
+                ->where('check_out_date >', $date)
+                ->count_all_results('bookings');
+            $percent = $room_count > 0 ? round(($occupied/$room_count)*100,1) : 0;
+            fputcsv($output, [$date, $occupied, $room_count, $percent.'%']);
+        }
+        fclose($output);
+        exit;
+    }
+
+    public function export_revenue_csv() {
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=revenue_report_' . date('Ymd_His') . '.csv');
+        $output = fopen('php://output', 'w');
+        fputcsv($output, ['Date', 'Revenue']);
+        $today = strtotime(date('Y-m-d'));
+        for ($i = 29; $i >= 0; $i--) {
+            $date = date('Y-m-d', strtotime("-$i days", $today));
+            $day_revenue = $this->db->select_sum('total_amount')
+                ->where_in('status', ['confirmed', 'checked_in', 'checked_out'])
+                ->where('check_in_date <=', $date)
+                ->where('check_out_date >', $date)
+                ->get('bookings')->row()->total_amount;
+            fputcsv($output, [$date, $day_revenue ? $day_revenue : 0]);
+        }
+        fclose($output);
+        exit;
+    }
+
+    public function export_top_guests_csv() {
+        header('Content-Type: text/csv; charset=utf-8');
+        header('Content-Disposition: attachment; filename=top_guests_' . date('Ymd_His') . '.csv');
+        $output = fopen('php://output', 'w');
+        fputcsv($output, ['Guest', 'Email', 'Total Bookings', 'Total Spend']);
+        $top_guests = $this->db->select('users.*, COUNT(bookings.id) as total_bookings, SUM(bookings.total_amount) as total_spend')
+            ->from('users')
+            ->join('bookings', 'users.id = bookings.user_id', 'left')
+            ->where('users.role', 'customer')
+            ->group_by('users.id')
+            ->order_by('total_spend', 'DESC')
+            ->limit(10)
+            ->get()->result();
+        foreach ($top_guests as $guest) {
+            fputcsv($output, [
+                $guest->first_name . ' ' . $guest->last_name,
+                $guest->email,
+                (int)$guest->total_bookings,
+                number_format($guest->total_spend, 2)
+            ]);
+        }
+        fclose($output);
+        exit;
+    }
+
+    // View waitlist
+    public function waitlist() {
+        $this->require_permission('manage_bookings');
+        $this->load->model('Waitlist_model');
+        $data['waitlist'] = $this->Waitlist_model->get_all();
+        $this->load->view('admin/waitlist', $data);
+    }
+
+    // Promote waitlist entry to booking
+    public function promote_waitlist($id) {
+        $this->require_permission('manage_bookings');
+        $this->load->model(['Waitlist_model', 'Booking_model', 'Room_model']);
+        $this->load->helper('notification');
+        $entry = $this->Waitlist_model->get_by_id($id);
+        if (!$entry || $entry->status != 'waiting') {
+            $this->session->set_flashdata('error', 'Invalid or already processed waitlist entry.');
+            redirect('admin/waitlist');
+        }
+        // Find an available room of the requested type
+        $rooms = $this->Room_model->get_rooms_by_type($entry->room_type);
+        $available_room = null;
+        foreach ($rooms as $room) {
+            if ($this->Booking_model->is_room_available($room->id, $entry->check_in_date, $entry->check_out_date)) {
+                $available_room = $room;
+                break;
+            }
+        }
+        if (!$available_room) {
+            $this->session->set_flashdata('error', 'No available room found for this waitlist entry.');
+            redirect('admin/waitlist');
+        }
+        // Create booking
+        $booking_data = [
+            'user_id' => $entry->user_id,
+            'room_id' => $available_room->id,
+            'check_in_date' => $entry->check_in_date,
+            'check_out_date' => $entry->check_out_date,
+            'adults' => $entry->adults,
+            'children' => $entry->children,
+            'total_amount' => $available_room->price_per_night * ((new DateTime($entry->check_out_date))->diff(new DateTime($entry->check_in_date))->days),
+            'special_requests' => $entry->special_requests,
+            'guest_name' => $entry->guest_name,
+            'guest_email' => $entry->guest_email,
+            'guest_phone' => $entry->guest_phone,
+            'status' => 'pending',
+            'created_at' => date('Y-m-d H:i:s')
         ];
-        
-        $this->load->view('admin/reports', $data);
+        $this->Booking_model->create_booking($booking_data);
+        $this->Waitlist_model->update_status($id, 'booked');
+        // Notify user
+        if (!empty($entry->guest_email)) {
+            send_booking_notification(
+                $entry->guest_email,
+                'Room Now Available - Booking Created',
+                'Good news! A room matching your waitlist request is now available and a booking has been created for you. Please log in or contact us to confirm.'
+            );
+        }
+        $this->session->set_flashdata('success', 'Waitlist entry promoted to booking.');
+        redirect('admin/waitlist');
+    }
+
+    // Mark waitlist entry as notified
+    public function mark_waitlist_notified($id) {
+        $this->require_permission('manage_bookings');
+        $this->load->model('Waitlist_model');
+        $this->Waitlist_model->update_status($id, 'notified');
+        $this->session->set_flashdata('success', 'Waitlist entry marked as notified.');
+        redirect('admin/waitlist');
+    }
+
+    // Mark waitlist entry as cancelled
+    public function mark_waitlist_cancelled($id) {
+        $this->require_permission('manage_bookings');
+        $this->load->model('Waitlist_model');
+        $this->Waitlist_model->update_status($id, 'cancelled');
+        $this->session->set_flashdata('success', 'Waitlist entry cancelled.');
+        redirect('admin/waitlist');
+    }
+
+    // List all coupons
+    public function coupons() {
+        $this->require_permission('manage_bookings');
+        $this->load->model('Coupon_model');
+        $data['coupons'] = $this->Coupon_model->get_all_coupons();
+        $this->load->view('admin/coupons', $data);
+    }
+
+    // Add a new coupon
+    public function add_coupon() {
+        $this->require_permission('manage_bookings');
+        $this->load->model('Coupon_model');
+        $this->form_validation->set_rules('code', 'Coupon Code', 'required|is_unique[coupons.code]');
+        $this->form_validation->set_rules('discount_type', 'Discount Type', 'required');
+        $this->form_validation->set_rules('discount_value', 'Discount Value', 'required|numeric');
+        if ($this->form_validation->run() == FALSE) {
+            $this->load->view('admin/add_coupon');
+        } else {
+            $data = [
+                'code' => strtoupper($this->input->post('code')),
+                'discount_type' => $this->input->post('discount_type'),
+                'discount_value' => $this->input->post('discount_value'),
+                'max_uses' => $this->input->post('max_uses'),
+                'expiry_date' => $this->input->post('expiry_date'),
+                'active' => $this->input->post('active') ? 1 : 0
+            ];
+            $this->Coupon_model->add_coupon($data);
+            $this->session->set_flashdata('success', 'Coupon added successfully.');
+            redirect('admin/coupons');
+        }
+    }
+
+    // Edit coupon
+    public function edit_coupon($id) {
+        $this->require_permission('manage_bookings');
+        $this->load->model('Coupon_model');
+        $coupon = $this->Coupon_model->get_all_coupons();
+        $data['coupon'] = null;
+        foreach ($coupon as $c) { if ($c->id == $id) $data['coupon'] = $c; }
+        if (!$data['coupon']) redirect('admin/coupons');
+        $this->form_validation->set_rules('discount_type', 'Discount Type', 'required');
+        $this->form_validation->set_rules('discount_value', 'Discount Value', 'required|numeric');
+        if ($this->form_validation->run() == FALSE) {
+            $this->load->view('admin/edit_coupon', $data);
+        } else {
+            $update = [
+                'discount_type' => $this->input->post('discount_type'),
+                'discount_value' => $this->input->post('discount_value'),
+                'max_uses' => $this->input->post('max_uses'),
+                'expiry_date' => $this->input->post('expiry_date'),
+                'active' => $this->input->post('active') ? 1 : 0
+            ];
+            $this->Coupon_model->update_coupon($id, $update);
+            $this->session->set_flashdata('success', 'Coupon updated successfully.');
+            redirect('admin/coupons');
+        }
+    }
+
+    // Delete coupon
+    public function delete_coupon($id) {
+        $this->require_permission('manage_bookings');
+        $this->load->model('Coupon_model');
+        $this->Coupon_model->delete_coupon($id);
+        $this->session->set_flashdata('success', 'Coupon deleted.');
+        redirect('admin/coupons');
+    }
+
+    // List all reviews
+    public function reviews() {
+        $this->require_permission('manage_bookings');
+        $this->load->model('Review_model');
+        $status = $this->input->get('status');
+        $data['reviews'] = $this->Review_model->get_all_reviews($status);
+        $this->load->view('admin/reviews', $data);
+    }
+
+    // Approve a review
+    public function approve_review($id) {
+        $this->require_permission('manage_bookings');
+        $this->load->model('Review_model');
+        $this->Review_model->approve_review($id);
+        $this->session->set_flashdata('success', 'Review approved.');
+        redirect('admin/reviews');
+    }
+
+    // Reject a review
+    public function reject_review($id) {
+        $this->require_permission('manage_bookings');
+        $this->load->model('Review_model');
+        $this->Review_model->reject_review($id);
+        $this->session->set_flashdata('success', 'Review rejected.');
+        redirect('admin/reviews');
+    }
+
+    // Reply to a review
+    public function reply_review($id) {
+        $this->require_permission('manage_bookings');
+        $this->load->model('Review_model');
+        $reply = $this->input->post('admin_reply');
+        $this->Review_model->reply_review($id, $reply);
+        $this->session->set_flashdata('success', 'Reply saved.');
+        redirect('admin/reviews');
+    }
+
+    // Rate Plans Management
+    public function rate_plans() {
+        $this->require_permission('manage_rooms');
+        $this->db->order_by('start_date DESC');
+        $data['rate_plans'] = $this->db->get('rate_plans')->result();
+        $data['room_types'] = $this->Room_model->get_room_types();
+        $this->load->view('admin/rate_plans', $data);
+    }
+
+    public function save_rate_plan() {
+        $this->require_permission('manage_rooms');
+        $data = [
+            'room_type' => $this->input->post('room_type'),
+            'start_date' => $this->input->post('start_date'),
+            'end_date' => $this->input->post('end_date'),
+            'price_per_night' => $this->input->post('price_per_night'),
+            'promotion_name' => $this->input->post('promotion_name'),
+            'promotion_description' => $this->input->post('promotion_description'),
+            'active' => 1
+        ];
+        $this->db->insert('rate_plans', $data);
+        $this->session->set_flashdata('success', 'Rate plan saved.');
+        redirect('admin/rate_plans');
+    }
+
+    public function edit_rate_plan($id) {
+        $this->require_permission('manage_rooms');
+        $plan = $this->db->get_where('rate_plans', ['id' => $id])->row();
+        if (!$plan) {
+            $this->session->set_flashdata('error', 'Rate plan not found.');
+            redirect('admin/rate_plans');
+        }
+        $data['edit_plan'] = $plan;
+        $data['rate_plans'] = $this->db->get('rate_plans')->result();
+        $data['room_types'] = $this->Room_model->get_room_types();
+        $this->load->view('admin/rate_plans', $data);
+    }
+
+    public function delete_rate_plan($id) {
+        $this->require_permission('manage_rooms');
+        $this->db->delete('rate_plans', ['id' => $id]);
+        $this->session->set_flashdata('success', 'Rate plan deleted.');
+        redirect('admin/rate_plans');
+    }
+
+    // List account deletion requests (GDPR)
+    public function deletion_requests() {
+        $this->require_permission('manage_users');
+        $data['pending_deletions'] = $this->db->get_where('users', ['status' => 'pending_deletion'])->result();
+        $this->load->view('admin/deletion_requests', $data);
+    }
+
+    // Approve and delete user account
+    public function approve_deletion($user_id) {
+        $this->require_permission('manage_users');
+        $this->User_model->delete_user($user_id);
+        $this->session->set_flashdata('success', 'User account deleted.');
+        redirect('admin/deletion_requests');
+    }
+
+    // Restore user account (cancel deletion)
+    public function restore_user($user_id) {
+        $this->require_permission('manage_users');
+        $this->User_model->update_user($user_id, ['status' => 'active']);
+        $this->session->set_flashdata('success', 'User account restored.');
+        redirect('admin/deletion_requests');
     }
 } 

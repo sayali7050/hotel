@@ -123,4 +123,44 @@ class User_model extends CI_Model {
         $this->db->limit($limit);
         return $this->db->get('users')->result();
     }
+
+    // Get permissions as array
+    public function get_permissions($user_id) {
+        $user = $this->get_user_by_id($user_id);
+        if ($user && !empty($user->permissions)) {
+            return json_decode($user->permissions, true);
+        }
+        return [];
+    }
+
+    // Set permissions (array) for a user
+    public function set_permissions($user_id, $permissions) {
+        $this->db->where('id', $user_id);
+        return $this->db->update('users', ['permissions' => json_encode($permissions)]);
+    }
+
+    // Get loyalty points for a user
+    public function get_loyalty_points($user_id) {
+        $user = $this->get_user_by_id($user_id);
+        return $user ? (int)$user->loyalty_points : 0;
+    }
+
+    // Add loyalty points to a user
+    public function add_loyalty_points($user_id, $points) {
+        $current = $this->get_loyalty_points($user_id);
+        $this->db->where('id', $user_id);
+        return $this->db->update('users', ['loyalty_points' => $current + (int)$points]);
+    }
+
+    // Set preferences for a user (as JSON string)
+    public function set_preferences($user_id, $preferences) {
+        $this->db->where('id', $user_id);
+        return $this->db->update('users', ['preferences' => json_encode($preferences)]);
+    }
+
+    // Get preferences for a user (as array)
+    public function get_preferences($user_id) {
+        $user = $this->get_user_by_id($user_id);
+        return $user && $user->preferences ? json_decode($user->preferences, true) : [];
+    }
 } 

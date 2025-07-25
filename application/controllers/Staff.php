@@ -6,6 +6,8 @@ class Staff extends CI_Controller {
     public function __construct() {
         parent::__construct();
         $this->load->model(['User_model', 'Room_model', 'Booking_model']);
+        $this->load->model('Audit_log_model');
+        $this->load->helper('notification');
         $this->load->library(['form_validation', 'session']);
         
         // Check if user is logged in and is staff
@@ -50,6 +52,23 @@ class Staff extends CI_Controller {
         $status = $this->input->post('status');
         
         if ($this->Booking_model->update_booking_status($id, $status)) {
+            // Notify customer
+            $booking = $this->Booking_model->get_booking_by_id($id);
+            if ($booking && isset($booking->guest_email)) {
+                send_booking_notification(
+                    $booking->guest_email,
+                    'Booking Status Updated',
+                    'Your booking status has been updated to: ' . ucfirst($status)
+                );
+            }
+            $this->Audit_log_model->add_log(
+                $this->session->userdata('user_id'),
+                'staff',
+                'update_booking_status',
+                'booking',
+                $id,
+                json_encode(['status' => $status])
+            );
             // Update room status based on booking status
             $booking = $this->Booking_model->get_booking_by_id($id);
             if ($booking) {
@@ -81,6 +100,14 @@ class Staff extends CI_Controller {
         $status = $this->input->post('status');
         
         if ($this->Room_model->update_room_status($id, $status)) {
+            $this->Audit_log_model->add_log(
+                $this->session->userdata('user_id'),
+                'staff',
+                'update_room_status',
+                'room',
+                $id,
+                json_encode(['status' => $status])
+            );
             $this->session->set_flashdata('success', 'Room status updated successfully');
         } else {
             $this->session->set_flashdata('error', 'Failed to update room status');
@@ -101,6 +128,22 @@ class Staff extends CI_Controller {
         if ($this->Booking_model->update_booking_status($booking_id, 'checked_in')) {
             // Update room status to occupied
             $this->Room_model->update_room_status($booking->room_id, 'occupied');
+            // Notify customer
+            if ($booking && isset($booking->guest_email)) {
+                send_booking_notification(
+                    $booking->guest_email,
+                    'Checked In',
+                    'You have been checked in. Enjoy your stay!'
+                );
+            }
+            $this->Audit_log_model->add_log(
+                $this->session->userdata('user_id'),
+                'staff',
+                'check_in',
+                'booking',
+                $booking_id,
+                null
+            );
             $this->session->set_flashdata('success', 'Guest checked in successfully');
         } else {
             $this->session->set_flashdata('error', 'Failed to check in guest');
@@ -122,6 +165,22 @@ class Staff extends CI_Controller {
         if ($this->Booking_model->update_booking_status($booking_id, 'checked_out')) {
             // Update room status to available
             $this->Room_model->update_room_status($booking->room_id, 'available');
+            // Notify customer
+            if ($booking && isset($booking->guest_email)) {
+                send_booking_notification(
+                    $booking->guest_email,
+                    'Checked Out',
+                    'You have been checked out. Thank you for staying with us!'
+                );
+            }
+            $this->Audit_log_model->add_log(
+                $this->session->userdata('user_id'),
+                'staff',
+                'check_out',
+                'booking',
+                $booking_id,
+                null
+            );
             $this->session->set_flashdata('success', 'Guest checked out successfully');
         } else {
             $this->session->set_flashdata('error', 'Failed to check out guest');
@@ -134,7 +193,9 @@ class Staff extends CI_Controller {
     public function search_bookings() {
         $search = $this->input->get('search');
         $status = $this->input->get('status');
-        
+        $room_type = $this->input->get('room_type');
+        $check_in = $this->input->get('check_in');
+        $check_out = $this->input->get('check_out');
         $this->db->select('bookings.*, users.first_name, users.last_name, users.email, rooms.room_number, rooms.room_type');
         $this->db->from('bookings');
         $this->db->join('users', 'bookings.user_id = users.id');
@@ -152,10 +213,20 @@ class Staff extends CI_Controller {
         if ($status) {
             $this->db->where('bookings.status', $status);
         }
+        if ($room_type) {
+            $this->db->where('rooms.room_type', $room_type);
+        }
+        if ($check_in) {
+            $this->db->where('bookings.check_in_date >=', $check_in);
+        }
+        if ($check_out) {
+            $this->db->where('bookings.check_out_date <=', $check_out);
+        }
         
         $this->db->order_by('bookings.created_at', 'DESC');
         $data['bookings'] = $this->db->get()->result();
-        
+        $this->load->model('Room_model');
+        $data['room_types'] = $this->Room_model->get_room_types();
         $this->load->view('staff/search_bookings', $data);
     }
     

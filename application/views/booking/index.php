@@ -245,6 +245,27 @@
                             </div>
                             
                             <div class="row">
+                                <!-- Room Type -->
+                                <div class="col-md-12 mb-3">
+                                    <label for="room_type" class="form-label">
+                                        <i class="fas fa-door-open me-2"></i>Room Type
+                                    </label>
+                                    <select class="form-select" id="room_type" name="room_type" required>
+                                        <?php if (!empty($room_types)) : ?>
+                                            <?php foreach ($room_types as $type) : ?>
+                                                <option value="<?php echo htmlspecialchars(is_array($type) ? $type['room_type'] : $type); ?>">
+                                                    <?php echo htmlspecialchars(is_array($type) ? $type['room_type'] : $type); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        <?php else : ?>
+                                            <option value="Standard">Standard</option>
+                                            <option value="Suite">Suite</option>
+                                            <option value="Executive">Executive</option>
+                                            <option value="Family">Family</option>
+                                        <?php endif; ?>
+                                    </select>
+                                </div>
+                                
                                 <!-- Adults -->
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">

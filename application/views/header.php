@@ -39,7 +39,7 @@
 
 <body class="index-page">
 
-  <header id="header" class="header fixed-top" style="background: linear-gradient(90deg, #0072ff 0%, #00c97b 100%);">
+  <header id="header" class="header fixed-top" style="background: linear-gradient(90deg, #0072ff 0%, #00c97b 100%);" role="banner">
     <style>
       .header .navmenu a { color: #fff !important; font-weight: 500; }
       .header .navmenu a.active { color: #ffd700 !important; }
@@ -50,12 +50,12 @@
         .header .d-flex.align-items-center { justify-content: flex-end !important; margin-top: 10px; }
       }
     </style>
-    <nav class="navbar navbar-expand-lg navbar-dark" style="background: transparent;">
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: transparent;" role="navigation" aria-label="Main site navigation">
       <div class="container position-relative">
-        <a href="<?php echo base_url(); ?>" class="logo d-flex align-items-center me-auto me-xl-0">
+        <a href="<?php echo base_url(); ?>" class="logo d-flex align-items-center me-auto me-xl-0" aria-label="LuxuryHotel Home">
           <!-- Uncomment the line below if you also wish to use an image logo -->
           <!-- <img src="<?php echo base_url('assets/img/logo.webp') ?>" alt=""> -->
-          <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="#000000" style="height:32px;width:32px;">
+          <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg" fill="#000000" style="height:32px;width:32px;" aria-hidden="true" focusable="false">
             <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
             <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
             <g id="SVGRepo_iconCarrier">
@@ -72,52 +72,52 @@
           <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="mainNavbar">
-          <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
-            <li class="nav-item"><a class="nav-link active" href="<?php echo base_url(); ?>">Home</a></li>
-            <li class="nav-item"><a class="nav-link" href="<?php echo base_url('about'); ?>">About</a></li>
-            <li class="nav-item"><a class="nav-link" href="<?php echo base_url('rooms'); ?>">Rooms</a></li>
-            <li class="nav-item"><a class="nav-link" href="<?php echo base_url('amenities'); ?>">Amenities</a></li>
-            <li class="nav-item"><a class="nav-link" href="<?php echo base_url('location'); ?>">Location</a></li>
+          <ul class="navbar-nav ms-auto mb-2 mb-lg-0" role="menubar">
+            <li class="nav-item"><a class="nav-link active" href="<?php echo base_url(); ?>" role="menuitem">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?php echo base_url('about'); ?>" role="menuitem">About</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?php echo base_url('rooms'); ?>" role="menuitem">Rooms</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?php echo base_url('amenities'); ?>" role="menuitem">Amenities</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?php echo base_url('location'); ?>" role="menuitem">Location</a></li>
             <li class="nav-item dropdown">
-              <a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">Pages</a>
-              <ul class="dropdown-menu" aria-labelledby="pagesDropdown">
-                <li><a class="dropdown-item" href="<?php echo base_url('room-details'); ?>">Room Details</a></li>
-                <li><a class="dropdown-item" href="<?php echo base_url('restaurant'); ?>">Restaurant</a></li>
-                <li><a class="dropdown-item" href="<?php echo base_url('offers'); ?>">Offers</a></li>
-                <li><a class="dropdown-item" href="<?php echo base_url('events'); ?>">Events</a></li>
-                <li><a class="dropdown-item" href="<?php echo base_url('gallery'); ?>">Gallery</a></li>
-                <li><a class="dropdown-item" href="<?php echo base_url('booking'); ?>">Booking</a></li>
-                <li><a class="dropdown-item" href="<?php echo base_url('terms'); ?>">Terms Page</a></li>
-                <li><a class="dropdown-item" href="<?php echo base_url('privacy'); ?>">Privacy Page</a></li>
-                <li><a class="dropdown-item" href="<?php echo base_url('starter-page'); ?>">Starter Page</a></li>
+              <a class="nav-link dropdown-toggle" href="#" id="pagesDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Pages</a>
+              <ul class="dropdown-menu" aria-labelledby="pagesDropdown" role="menu">
+                <li><a class="dropdown-item" href="<?php echo base_url('room-details'); ?>" role="menuitem">Room Details</a></li>
+                <li><a class="dropdown-item" href="<?php echo base_url('restaurant'); ?>" role="menuitem">Restaurant</a></li>
+                <li><a class="dropdown-item" href="<?php echo base_url('offers'); ?>" role="menuitem">Offers</a></li>
+                <li><a class="dropdown-item" href="<?php echo base_url('events'); ?>" role="menuitem">Events</a></li>
+                <li><a class="dropdown-item" href="<?php echo base_url('gallery'); ?>" role="menuitem">Gallery</a></li>
+                <li><a class="dropdown-item" href="<?php echo base_url('booking'); ?>" role="menuitem">Booking</a></li>
+                <li><a class="dropdown-item" href="<?php echo base_url('terms'); ?>" role="menuitem">Terms Page</a></li>
+                <li><a class="dropdown-item" href="<?php echo base_url('privacy'); ?>" role="menuitem">Privacy Page</a></li>
+                <li><a class="dropdown-item" href="<?php echo base_url('starter-page'); ?>" role="menuitem">Starter Page</a></li>
               </ul>
             </li>
-            <li class="nav-item"><a class="nav-link" href="<?php echo base_url('contact'); ?>">Contact</a></li>
+            <li class="nav-item"><a class="nav-link" href="<?php echo base_url('contact'); ?>" role="menuitem">Contact</a></li>
           </ul>
-          <div class="d-flex align-items-center ms-lg-3 mt-3 mt-lg-0">
+          <div class="d-flex align-items-center ms-lg-3 mt-3 mt-lg-0" role="navigation" aria-label="User menu">
             <?php $CI =& get_instance(); ?>
             <?php if($CI->session->userdata('logged_in')): ?>
               <div class="dropdown me-3">
-                <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown">
+                <button class="btn btn-outline-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                   <i class="fas fa-user"></i> <?php echo $CI->session->userdata('username'); ?>
                 </button>
-                <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="<?php echo base_url('customer/dashboard'); ?>">My Dashboard</a></li>
-                  <li><a class="dropdown-item" href="<?php echo base_url('customer/my-bookings'); ?>">My Bookings</a></li>
-                  <li><a class="dropdown-item" href="<?php echo base_url('customer/profile'); ?>">Profile</a></li>
+                <ul class="dropdown-menu" aria-labelledby="userDropdown" role="menu">
+                  <li><a class="dropdown-item" href="<?php echo base_url('customer/dashboard'); ?>" role="menuitem">My Dashboard</a></li>
+                  <li><a class="dropdown-item" href="<?php echo base_url('customer/my-bookings'); ?>" role="menuitem">My Bookings</a></li>
+                  <li><a class="dropdown-item" href="<?php echo base_url('customer/profile'); ?>" role="menuitem">Profile</a></li>
                   <li><hr class="dropdown-divider"></li>
-                  <li><a class="dropdown-item" href="<?php echo base_url('logout'); ?>">Logout</a></li>
+                  <li><a class="dropdown-item" href="<?php echo base_url('logout'); ?>" role="menuitem">Logout</a></li>
                 </ul>
               </div>
             <?php else: ?>
               <div class="dropdown me-2">
-                <button class="btn btn-primary dropdown-toggle" type="button" id="loginDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="btn btn-primary dropdown-toggle" type="button" id="loginDropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                   <i class="fas fa-sign-in-alt"></i> Login
                 </button>
-                <ul class="dropdown-menu">
-                  <li><a class="dropdown-item" href="<?php echo base_url('auth/admin_login'); ?>">Login as Admin</a></li>
-                  <li><a class="dropdown-item" href="<?php echo base_url('auth/staff_login'); ?>">Login as Staff</a></li>
-                  <li><a class="dropdown-item" href="<?php echo base_url('auth/customer_login'); ?>">Login as Customer</a></li>
+                <ul class="dropdown-menu" aria-labelledby="loginDropdown" role="menu">
+                  <li><a class="dropdown-item" href="<?php echo base_url('auth/admin_login'); ?>" role="menuitem">Login as Admin</a></li>
+                  <li><a class="dropdown-item" href="<?php echo base_url('auth/staff_login'); ?>" role="menuitem">Login as Staff</a></li>
+                  <li><a class="dropdown-item" href="<?php echo base_url('auth/customer_login'); ?>" role="menuitem">Login as Customer</a></li>
                 </ul>
               </div>
               <a class="btn btn-outline-light me-2 mb-2 mb-lg-0" href="<?php echo base_url('auth/customer_register'); ?>">Register</a>
@@ -128,3 +128,9 @@
       </div>
     </nav>
   </header>
+  <style>
+  .navbar-nav .nav-link:focus, .dropdown-menu .dropdown-item:focus, .btn:focus {
+    outline: 2px solid #0072ff;
+    background: #e6f0ff;
+  }
+  </style>

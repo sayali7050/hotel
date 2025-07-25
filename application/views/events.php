@@ -38,6 +38,7 @@
 </head>
 
 <body class="amenities-page">
+  <a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
 
   <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container position-relative d-flex align-items-center justify-content-between">
@@ -104,7 +105,7 @@
 
     </div>
   </header>
-  <main class="main">
+  <main id="main-content" role="main">
 
     <!-- Page Title -->
     <div class="page-title dark-background" data-aos="fade" style="background-image: url(<?php echo base_url('assets/img/hotel/showcase-7.we'); ?>bp);">
@@ -121,7 +122,7 @@
     </div><!-- End Page Title -->
 
     <!-- Events Section -->
-    <section id="events" class="events section">
+    <section id="events" class="events section" aria-label="Hotel Events" role="region">
 
       <div class="container" data-aos="fade-up" data-aos-delay="100">
 

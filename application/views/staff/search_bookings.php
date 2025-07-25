@@ -3,10 +3,10 @@
 <div class="container py-5">
   <h2 class="mb-4"><i class="fas fa-search"></i> Search Bookings</h2>
   <form class="row g-3 mb-4" method="get" action="">
-    <div class="col-md-4">
+    <div class="col-md-3">
       <input type="text" class="form-control" name="search" placeholder="Guest name, email, or room #" value="<?php echo $this->input->get('search'); ?>">
     </div>
-    <div class="col-md-3">
+    <div class="col-md-2">
       <select class="form-select" name="status">
         <option value="">All Statuses</option>
         <option value="pending" <?php if($this->input->get('status')=='pending') echo 'selected'; ?>>Pending</option>
@@ -17,6 +17,20 @@
       </select>
     </div>
     <div class="col-md-2">
+      <select class="form-select" name="room_type">
+        <option value="">All Room Types</option>
+        <?php if(isset($room_types)): foreach($room_types as $rt): ?>
+          <option value="<?php echo $rt->room_type; ?>" <?php if($this->input->get('room_type')==$rt->room_type) echo 'selected'; ?>><?php echo $rt->room_type; ?></option>
+        <?php endforeach; endif; ?>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <input type="date" class="form-control" name="check_in" value="<?php echo $this->input->get('check_in'); ?>" placeholder="Check-in">
+    </div>
+    <div class="col-md-2">
+      <input type="date" class="form-control" name="check_out" value="<?php echo $this->input->get('check_out'); ?>" placeholder="Check-out">
+    </div>
+    <div class="col-md-1">
       <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search"></i> Search</button>
     </div>
   </form>

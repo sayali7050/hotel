@@ -20,15 +20,37 @@
             box-shadow: 0 8px 25px rgba(79, 172, 254, 0.1);
             border: 1px solid rgba(79, 172, 254, 0.1);
         }
+        .visually-hidden-focusable.skip-link {
+            position: absolute;
+            left: -9999px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            z-index: 1000;
+        }
+        .visually-hidden-focusable.skip-link:focus {
+            left: 10px;
+            top: 10px;
+            width: auto;
+            height: auto;
+            background: #0072ff;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            outline: 2px solid #fff;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
+    <a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
     <?php $this->load->view('admin/includes/header'); ?>
     <!-- Include Sidebar -->
     <?php $this->load->view('admin/includes/sidebar'); ?>
 
     <!-- Main Content -->
-    <div class="main-content">
+    <main id="main-content" role="main">
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h2><i class="fas fa-edit"></i> Edit Room</h2>
                 <a href="<?php echo base_url('admin/rooms'); ?>" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back to Rooms</a>
@@ -109,7 +131,7 @@
                     </div>
                 <?php echo form_close(); ?>
             </div>
-        </div>
+        </main>
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>

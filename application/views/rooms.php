@@ -38,6 +38,7 @@
 </head>
 
 <body class="amenities-page">
+  <a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
 
   <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container position-relative d-flex align-items-center justify-content-between">
@@ -104,7 +105,7 @@
 
     </div>
   </header>
-  <main class="main">
+  <main id="main-content" role="main">
 
     <!-- Page Title -->
     <div class="page-title dark-background" data-aos="fade" style="background-image: url(assets/img/hotel/showcase-7.webp);">
@@ -223,7 +224,7 @@
                       <span><i class="bi bi-cup-hot"></i> Minibar</span>
                     </div>
                     <div class="room-actions">
-                      <a href="<?php echo base_url('room-details'); ?>" class="btn btn-primary">View Details</a>
+                      <a href="<?php echo base_url('room-details'); ?>" class="btn btn-primary" aria-label="View details for Deluxe Ocean Suite">View Details</a>
                       <a href="<?php echo base_url('booking'); ?>" class="btn btn-outline-primary">Check Availability</a>
                     </div>
                   </div>
@@ -248,7 +249,7 @@
                       <span><i class="bi bi-tv"></i> Smart TV</span>
                     </div>
                     <div class="room-actions">
-                      <a href="<?php echo base_url('room-details'); ?>" class="btn btn-primary">View Details</a>
+                      <a href="<?php echo base_url('room-details'); ?>" class="btn btn-primary" aria-label="View details for Garden View Double">View Details</a>
                       <a href="<?php echo base_url('booking'); ?>" class="btn btn-outline-primary">Check Availability</a>
                     </div>
                   </div>
@@ -274,7 +275,7 @@
                       <span><i class="bi bi-controller"></i> Game Console</span>
                     </div>
                     <div class="room-actions">
-                      <a href="<?php echo base_url('room-details'); ?>" class="btn btn-primary">View Details</a>
+                      <a href="<?php echo base_url('room-details'); ?>" class="btn btn-primary" aria-label="View details for Family Suite">View Details</a>
                       <a href="<?php echo base_url('booking'); ?>" class="btn btn-outline-primary">Check Availability</a>
                     </div>
                   </div>
@@ -299,7 +300,7 @@
                       <span><i class="bi bi-telephone"></i> Business Line</span>
                     </div>
                     <div class="room-actions">
-                      <a href="<?php echo base_url('room-details'); ?>" class="btn btn-primary">View Details</a>
+                      <a href="<?php echo base_url('room-details'); ?>" class="btn btn-primary" aria-label="View details for Business Executive">View Details</a>
                       <a href="<?php echo base_url('booking'); ?>" class="btn btn-outline-primary">Check Availability</a>
                     </div>
                   </div>
@@ -324,7 +325,7 @@
                       <span><i class="bi bi-car-front"></i> Free Parking</span>
                     </div>
                     <div class="room-actions">
-                      <a href="<?php echo base_url('room-details'); ?>" class="btn btn-primary">View Details</a>
+                      <a href="<?php echo base_url('room-details'); ?>" class="btn btn-primary" aria-label="View details for Standard King">View Details</a>
                       <a href="<?php echo base_url('booking'); ?>" class="btn btn-outline-primary">Check Availability</a>
                     </div>
                   </div>
@@ -350,7 +351,7 @@
                       <span><i class="bi bi-star"></i> Premium Access</span>
                     </div>
                     <div class="room-actions">
-                      <a href="<?php echo base_url('room-details'); ?>" class="btn btn-primary">View Details</a>
+                      <a href="<?php echo base_url('room-details'); ?>" class="btn btn-primary" aria-label="View details for Presidential Suite">View Details</a>
                       <a href="<?php echo base_url('booking'); ?>" class="btn btn-outline-primary">Check Availability</a>
                     </div>
                   </div>

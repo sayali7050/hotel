@@ -42,12 +42,16 @@
             min-height: auto;
         }
     }
+    .sidebar a:focus {
+      outline: 2px solid #0072ff;
+      background: #e6f0ff;
+    }
 </style>
 <div class="customer-sidebar p-4">
     <h4 class="text-center">
         <i class="fas fa-user-circle"></i> Customer Panel
     </h4>
-    <nav class="nav flex-column">
+    <nav class="nav flex-column" role="navigation" aria-label="Customer sidebar navigation">
         <a class="nav-link <?php echo ($segment2 == 'dashboard') ? 'active' : ''; ?>" href="<?php echo base_url('customer/dashboard'); ?>">
             <i class="fas fa-tachometer-alt"></i> Dashboard
         </a>

@@ -307,6 +307,68 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Room Cleaning & Maintenance Status -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0"><i class="fas fa-broom"></i> Room Cleaning & Maintenance Status</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-bordered table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Room #</th>
+                                                <th>Type</th>
+                                                <th>Cleaning Status</th>
+                                                <th>Maintenance Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                        <?php foreach($rooms as $room): ?>
+                                            <tr>
+                                                <td><?php echo htmlspecialchars($room->room_number); ?></td>
+                                                <td><?php echo htmlspecialchars($room->room_type); ?></td>
+                                                <td>
+                                                    <span class="badge bg-<?php
+                                                        switch($room->cleaning_status) {
+                                                            case 'clean': echo 'success'; break;
+                                                            case 'dirty': echo 'danger'; break;
+                                                            case 'in_progress': echo 'warning'; break;
+                                                            case 'out_of_service': echo 'secondary'; break;
+                                                        }
+                                                    ?>">
+                                                        <?php echo ucfirst(str_replace('_',' ',$room->cleaning_status)); ?>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge bg-<?php
+                                                        switch($room->maintenance_status) {
+                                                            case 'ok': echo 'success'; break;
+                                                            case 'needs_attention': echo 'warning'; break;
+                                                            case 'under_maintenance': echo 'danger'; break;
+                                                        }
+                                                    ?>">
+                                                        <?php echo ucfirst(str_replace('_',' ',$room->maintenance_status)); ?>
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <a href="<?php echo base_url('staff/update_cleaning_status/'.$room->id); ?>" class="btn btn-sm btn-outline-primary">Update Cleaning</a>
+                                                    <a href="<?php echo base_url('staff/update_maintenance_status/'.$room->id); ?>" class="btn btn-sm btn-outline-warning ms-1">Update Maintenance</a>
+                                                    <a href="<?php echo base_url('staff/maintenance_requests/'.$room->id); ?>" class="btn btn-sm btn-outline-danger ms-1">Requests</a>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

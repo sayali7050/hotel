@@ -1,6 +1,7 @@
 <?php $CI =& get_instance(); ?>
 <?php $this->load->view('header'); ?>
 <div class="container py-5">
+  <a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
   <div class="row">
     <div class="col-md-3 mb-4 mb-md-0">
       <?php $this->load->view('customer/sidebar'); ?>
@@ -16,14 +17,14 @@
             <div class="col-12">
                 
                 <?php if($this->session->flashdata('success')): ?>
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <div class="alert alert-success" role="alert" aria-live="polite">
                         <i class="fas fa-check-circle"></i> <?php echo $this->session->flashdata('success'); ?>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
                 <?php endif; ?>
                 
                 <?php if($this->session->flashdata('error')): ?>
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <div class="alert alert-danger" role="alert" aria-live="assertive">
                         <i class="fas fa-exclamation-triangle"></i> <?php echo $this->session->flashdata('error'); ?>
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
@@ -94,11 +95,14 @@
                                             <i class="fas fa-ellipsis-v"></i>
                                         </button>
                                         <ul class="dropdown-menu">
-                                            <li><a class="dropdown-item" href="<?php echo base_url('customer/view_booking/'.$booking->id); ?>">
+                                            <li><a class="dropdown-item" href="<?php echo base_url('customer/view_booking/'.$booking->id); ?>" aria-label="View booking <?php echo $booking->id ?>">
                                                 <i class="fas fa-eye"></i> View Details
                                             </a></li>
                                             <?php if($booking->status == 'pending' || $booking->status == 'confirmed'): ?>
-                                                <li><a class="dropdown-item text-danger" href="<?php echo base_url('customer/cancel_booking/'.$booking->id); ?>" onclick="return confirm('Are you sure you want to cancel this booking?')">
+                                                <li><a class="dropdown-item" href="<?php echo base_url('customer/edit_booking/'.$booking->id); ?>" aria-label="Edit booking <?php echo $booking->id ?>">
+                                                    <i class="fas fa-edit"></i> Edit Booking
+                                                </a></li>
+                                                <li><a class="dropdown-item text-danger" href="<?php echo base_url('customer/cancel_booking/'.$booking->id); ?>" aria-label="Cancel booking <?php echo $booking->id ?>" onclick="return confirm('Are you sure you want to cancel this booking?')">
                                                     <i class="fas fa-times"></i> Cancel Booking
                                                 </a></li>
                                             <?php endif; ?>
@@ -128,3 +132,26 @@
   </div>
 </div>
 <?php $this->load->view('footer'); ?> 
+<style>
+.visually-hidden-focusable.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 1000;
+}
+.visually-hidden-focusable.skip-link:focus {
+  left: 10px;
+  top: 10px;
+  width: auto;
+  height: auto;
+  background: #0072ff;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 4px;
+  outline: 2px solid #fff;
+  text-decoration: none;
+}
+</style> 

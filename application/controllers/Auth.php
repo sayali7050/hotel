@@ -10,6 +10,9 @@ class Auth extends CI_Controller {
         $this->load->library('session');
     }
     
+    // Set this to true to require 2FA for admin logins
+    private $enable_admin_2fa = true;
+
     // Admin login page
     public function admin_login() {
         if ($this->session->userdata('logged_in') && $this->session->userdata('role') == 'admin') {
@@ -29,15 +32,35 @@ class Auth extends CI_Controller {
             $user = $this->User_model->login($username, $password);
             
             if ($user && $user->role == 'admin') {
-                $this->session->set_userdata([
-                    'user_id' => $user->id,
-                    'username' => $user->username,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'logged_in' => TRUE
-                ]);
-                
-                redirect('admin/dashboard');
+                if ($this->enable_admin_2fa) {
+                    // Generate 2FA code
+                    $code = str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
+                    $expires = date('Y-m-d H:i:s', strtotime('+5 minutes'));
+                    $this->db->where('id', $user->id);
+                    $this->db->update('users', [
+                        'last_2fa_code' => $code,
+                        'last_2fa_expires' => $expires
+                    ]);
+                    // Send code via email
+                    $this->load->helper('notification');
+                    $subject = 'Your Admin Login 2FA Code';
+                    $message = "Your 2FA code is: $code\nThis code will expire in 5 minutes.";
+                    send_booking_notification($user->email, $subject, $message, null, ['user_id' => $user->id]);
+                    // Store user_id in session for 2FA step
+                    $this->session->set_userdata('pending_2fa_user_id', $user->id);
+                    $this->session->set_flashdata('success', 'A 2FA code has been sent to your email.');
+                    redirect('auth/admin_2fa');
+                } else {
+                    // Skip 2FA, log in directly
+                    $this->session->set_userdata([
+                        'user_id' => $user->id,
+                        'username' => $user->username,
+                        'email' => $user->email,
+                        'role' => $user->role,
+                        'logged_in' => TRUE
+                    ]);
+                    redirect('admin/dashboard');
+                }
             } else {
                 // More specific error messages
                 if (!$user) {
@@ -49,6 +72,47 @@ class Auth extends CI_Controller {
                 }
                 redirect('auth/admin_login');
             }
+        }
+    }
+
+    // Show 2FA code entry form
+    public function admin_2fa() {
+        if (!$this->session->userdata('pending_2fa_user_id')) {
+            redirect('auth/admin_login');
+        }
+        $this->load->view('auth/admin_2fa');
+    }
+
+    // Verify 2FA code
+    public function verify_admin_2fa() {
+        $user_id = $this->session->userdata('pending_2fa_user_id');
+        if (!$user_id) {
+            redirect('auth/admin_login');
+        }
+        $this->form_validation->set_rules('code', '2FA Code', 'required|exact_length[6]');
+        if ($this->form_validation->run() == FALSE) {
+            $this->session->set_flashdata('error', 'Please enter the 6-digit code sent to your email.');
+            redirect('auth/admin_2fa');
+        }
+        $code = $this->input->post('code');
+        $user = $this->User_model->get_user_by_id($user_id);
+        if ($user && $user->last_2fa_code === $code && $user->last_2fa_expires >= date('Y-m-d H:i:s')) {
+            // Complete login
+            $this->session->set_userdata([
+                'user_id' => $user->id,
+                'username' => $user->username,
+                'email' => $user->email,
+                'role' => $user->role,
+                'logged_in' => TRUE
+            ]);
+            $this->session->unset_userdata('pending_2fa_user_id');
+            // Clear 2FA code
+            $this->db->where('id', $user->id);
+            $this->db->update('users', ['last_2fa_code' => null, 'last_2fa_expires' => null]);
+            redirect('admin/dashboard');
+        } else {
+            $this->session->set_flashdata('error', 'Invalid or expired 2FA code.');
+            redirect('auth/admin_2fa');
         }
     }
     

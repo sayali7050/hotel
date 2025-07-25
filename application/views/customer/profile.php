@@ -13,9 +13,31 @@
         .navbar { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
         .profile-card { background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
         .profile-header { background: linear-gradient(45deg, #667eea, #764ba2); color: white; border-radius: 15px 15px 0 0; padding: 30px; text-align: center; }
+        .visually-hidden-focusable.skip-link {
+            position: absolute;
+            left: -9999px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            z-index: 1000;
+        }
+        .visually-hidden-focusable.skip-link:focus {
+            left: 10px;
+            top: 10px;
+            width: auto;
+            height: auto;
+            background: #0072ff;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            outline: 2px solid #fff;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
+    <a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
@@ -54,6 +76,7 @@
         </div>
     </nav>
 
+    <main id="main-content" role="main">
     <div class="container py-5">
       <div class="row">
         <div class="col-md-3 mb-4 mb-md-0">
@@ -69,16 +92,14 @@
                 
                 <div class="p-4">
                     <?php if($this->session->flashdata('success')): ?>
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <div class="alert alert-success" role="alert" aria-live="polite">
                             <i class="fas fa-check-circle"></i> <?php echo $this->session->flashdata('success'); ?>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     <?php endif; ?>
                     
                     <?php if($this->session->flashdata('error')): ?>
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <div class="alert alert-danger" role="alert" aria-live="assertive">
                             <i class="fas fa-exclamation-triangle"></i> <?php echo $this->session->flashdata('error'); ?>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                         </div>
                     <?php endif; ?>
 
@@ -132,6 +153,17 @@
                             </div>
                         </div>
 
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="fas fa-gem"></i> Loyalty Points</label>
+                                <input type="text" class="form-control" value="<?php echo isset($user->loyalty_points) ? (int)$user->loyalty_points : 0; ?>" readonly>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="preferences" class="form-label"><i class="fas fa-star"></i> Preferences</label>
+                                <textarea class="form-control" id="preferences" name="preferences" rows="2" placeholder="E.g. High floor, king bed, vegan meals, etc."><?php echo set_value('preferences', isset($user->preferences) ? $user->preferences : ''); ?></textarea>
+                            </div>
+                        </div>
+
                         <div class="d-flex justify-content-between">
                             <a href="<?php echo base_url('customer/dashboard'); ?>" class="btn btn-secondary">
                                 <i class="fas fa-arrow-left"></i> Back to Dashboard
@@ -140,12 +172,26 @@
                                 <i class="fas fa-save"></i> Update Profile
                             </button>
                         </div>
+                        <div class="mt-4 text-end">
+                            <a href="<?php echo base_url('customer/export_my_data'); ?>" class="btn btn-outline-info">
+                                <i class="fas fa-download"></i> Export My Data
+                            </a>
+                        </div>
+                        <div class="mt-2 text-end">
+                            <form action="<?php echo base_url('customer/request_account_deletion'); ?>" method="post" onsubmit="return confirm('Are you sure you want to request deletion of your account? This action cannot be undone.');">
+                                <button type="submit" class="btn btn-outline-danger">
+                                    <i class="fas fa-user-slash"></i> Request Account Deletion
+                                </button>
+                            </form>
+                            <small class="text-danger d-block mt-2">Warning: This will permanently delete your account and all associated data after admin approval.</small>
+                        </div>
                     <?php echo form_close(); ?>
                 </div>
             </div>
         </div>
       </div>
     </div>
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

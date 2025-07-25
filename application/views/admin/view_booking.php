@@ -22,15 +22,37 @@
         }
         .status-badge { font-size: 1rem; padding: 8px 15px; }
         .info-section { border-left: 4px solid #4facfe; padding-left: 20px; margin-bottom: 30px; }
+        .visually-hidden-focusable.skip-link {
+            position: absolute;
+            left: -9999px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            z-index: 1000;
+        }
+        .visually-hidden-focusable.skip-link:focus {
+            left: 10px;
+            top: 10px;
+            width: auto;
+            height: auto;
+            background: #0072ff;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            outline: 2px solid #fff;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
+    <a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
     <?php $this->load->view('admin/includes/header'); ?>
     <!-- Include Sidebar -->
     <?php $this->load->view('admin/includes/sidebar'); ?>
 
     <!-- Main Content -->
-    <div class="main-content">
+    <main id="main-content" role="main">
 
     <div class="container mt-4">
         <div class="row">
@@ -38,7 +60,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2><i class="fas fa-calendar-check"></i> Booking Details</h2>
                     <div>
-                        <a href="<?php echo base_url('admin/edit_booking/'.$booking->id); ?>" class="btn btn-primary me-2">
+                        <a href="<?php echo base_url('admin/edit_booking/'.$booking->id); ?>" class="btn btn-primary me-2" aria-label="Edit booking <?= $booking->id ?>">
                             <i class="fas fa-edit"></i> Edit Booking
                         </a>
                         <a href="<?php echo base_url('admin/bookings'); ?>" class="btn btn-secondary">

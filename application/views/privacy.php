@@ -18,6 +18,7 @@
   <link href="<?php echo base_url('application/assets/css/main.css'); ?>" rel="stylesheet">
 </head>
 <body>
+  <a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
   <!-- ======= Header ======= -->
   <header id="header" class="header fixed-top">
     <div class="container-fluid container-xl d-flex align-items-center justify-content-between">
@@ -43,9 +44,9 @@
   </header>
   <!-- End Header -->
 
-  <main id="main">
+  <main id="main-content" role="main">
     <!-- ======= Privacy Policy Section ======= -->
-    <section id="privacy" class="privacy">
+    <section id="privacy" class="privacy" aria-label="Privacy Policy" role="region">
       <div class="container" data-aos="fade-up">
         <div class="section-title">
           <h2>Privacy Policy</h2>
@@ -91,6 +92,29 @@
   <script src="<?php echo base_url('application/assets/vendor/swiper/swiper-bundle.min.js'); ?>"></script>
   <script src="<?php echo base_url('application/assets/vendor/php-email-form/validate.js'); ?>"></script>
   <script src="<?php echo base_url('application/assets/js/main.js'); ?>"></script>
+  <style>
+.visually-hidden-focusable.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  z-index: 1000;
+}
+.visually-hidden-focusable.skip-link:focus {
+  left: 10px;
+  top: 10px;
+  width: auto;
+  height: auto;
+  background: #0072ff;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 4px;
+  outline: 2px solid #fff;
+  text-decoration: none;
+}
+</style>
 </body>
 </html>
 

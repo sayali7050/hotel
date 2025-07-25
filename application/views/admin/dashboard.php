@@ -44,20 +44,40 @@
             box-shadow: 0 8px 25px rgba(79, 172, 254, 0.1);
             border: 1px solid rgba(79, 172, 254, 0.1);
         }
+        .visually-hidden-focusable.skip-link {
+            position: absolute;
+            left: -9999px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            z-index: 1000;
+        }
+        .visually-hidden-focusable.skip-link:focus {
+            left: 10px;
+            top: 10px;
+            width: auto;
+            height: auto;
+            background: #0072ff;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            outline: 2px solid #fff;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
+    <a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
     <?php $this->load->view('admin/includes/header'); ?>
     <!-- Include Sidebar -->
     <?php $this->load->view('admin/includes/sidebar'); ?>
 
     <!-- Main Content -->
-    <div class="main-content">
+    <main id="main-content" role="main">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
-                    <div class="text-muted">
-                        Welcome, <?php echo $this->session->userdata('username'); ?>!
-                    </div>
+                    <h2><i class="fas fa-chart-line"></i> Admin Dashboard</h2>
+                    <a href="<?php echo base_url('admin/export_bookings_csv'); ?>" class="btn btn-success"><i class="fas fa-file-csv"></i> Export Bookings CSV</a>
                 </div>
 
                 <?php if($this->session->flashdata('success')): ?>
@@ -77,7 +97,7 @@
                 <?php endif; ?>
 
                 <!-- Statistics Cards -->
-                <div class="row mb-4">
+                <div class="row mb-4" aria-label="Dashboard statistics" role="region">
                     <div class="col-md-3 mb-3">
                         <div class="stat-card">
                             <div class="d-flex align-items-center">
@@ -175,6 +195,28 @@
                     </div>
                 </div>
 
+                <!-- Charts -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card shadow-sm p-3 mb-3">
+                            <h5 class="mb-2">Occupancy Rate</h5>
+                            <canvas id="occupancyChart" aria-label="Occupancy Rate Chart" role="img"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card shadow-sm p-3 mb-3">
+                            <h5 class="mb-2">Revenue Trend</h5>
+                            <canvas id="revenueChart" aria-label="Revenue Chart" role="img"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card shadow-sm p-3 mb-3">
+                            <h5 class="mb-2">Booking Status</h5>
+                            <canvas id="statusChart" aria-label="Booking Status Chart" role="img"></canvas>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Recent Activity -->
                 <div class="row">
                     <div class="col-md-6 mb-4">
@@ -262,5 +304,54 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    // Occupancy Chart
+    var occupancyCtx = document.getElementById('occupancyChart').getContext('2d');
+    var occupancyChart = new Chart(occupancyCtx, {
+        type: 'line',
+        data: {
+            labels: <?php echo json_encode($occupancy_data['labels']); ?>,
+            datasets: [{
+                label: 'Occupancy %',
+                data: <?php echo json_encode($occupancy_data['values']); ?>,
+                backgroundColor: 'rgba(0, 114, 255, 0.2)',
+                borderColor: '#0072ff',
+                borderWidth: 2,
+                fill: true
+            }]
+        },
+        options: { scales: { y: { beginAtZero: true, max: 100 } } }
+    });
+    // Revenue Chart
+    var revenueCtx = document.getElementById('revenueChart').getContext('2d');
+    var revenueChart = new Chart(revenueCtx, {
+        type: 'bar',
+        data: {
+            labels: <?php echo json_encode($revenue_data['labels']); ?>,
+            datasets: [{
+                label: 'Revenue ($)',
+                data: <?php echo json_encode($revenue_data['values']); ?>,
+                backgroundColor: '#00c97b',
+                borderColor: '#00c97b',
+                borderWidth: 1
+            }]
+        },
+        options: { scales: { y: { beginAtZero: true } } }
+    });
+    // Booking Status Chart
+    var statusCtx = document.getElementById('statusChart').getContext('2d');
+    var statusChart = new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: <?php echo json_encode($status_data['labels']); ?>,
+            datasets: [{
+                data: <?php echo json_encode($status_data['values']); ?>,
+                backgroundColor: ['#0072ff', '#00c97b', '#ffc107', '#dc3545', '#6c757d'],
+            }]
+        },
+        options: { cutout: '70%' }
+    });
+    </script>
 </body>
 </html> 

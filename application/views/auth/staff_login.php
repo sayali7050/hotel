@@ -59,9 +59,31 @@
             border-radius: 10px;
             border: none;
         }
+        .visually-hidden-focusable.skip-link {
+            position: absolute;
+            left: -9999px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            z-index: 1000;
+        }
+        .visually-hidden-focusable.skip-link:focus {
+            left: 10px;
+            top: 10px;
+            width: auto;
+            height: auto;
+            background: #0072ff;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 4px;
+            outline: 2px solid #fff;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
+    <a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
     <div class="login-card">
         <div class="login-header">
             <i class="fas fa-user-tie fa-3x mb-3"></i>
@@ -69,14 +91,21 @@
             <p class="mb-0">Hotel Management System</p>
         </div>
         <div class="login-body">
+            <?php if($this->session->flashdata('success')): ?>
+                <div class="alert alert-success" role="alert" aria-live="polite">
+                    <i class="fas fa-check-circle"></i>
+                    <?php echo $this->session->flashdata('success'); ?>
+                </div>
+            <?php endif; ?>
+            
             <?php if($this->session->flashdata('error')): ?>
-                <div class="alert alert-danger">
+                <div class="alert alert-danger" role="alert" aria-live="assertive">
                     <i class="fas fa-exclamation-triangle"></i>
                     <?php echo $this->session->flashdata('error'); ?>
                 </div>
             <?php endif; ?>
             
-            <?php echo form_open('auth/staff_login'); ?>
+            <form action="<?php echo site_url('auth/staff_login'); ?>" method="post" aria-label="Staff login form">
                 <div class="mb-3">
                     <label for="username" class="form-label">
                         <i class="fas fa-user"></i> Username
@@ -96,7 +125,7 @@
                 <button type="submit" class="btn btn-success btn-login w-100">
                     <i class="fas fa-sign-in-alt"></i> Login
                 </button>
-            <?php echo form_close(); ?>
+            </form>
             
             <div class="text-center mt-4">
                 <a href="<?php echo base_url(); ?>" class="text-decoration-none">

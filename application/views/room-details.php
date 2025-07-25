@@ -38,6 +38,7 @@
 </head>
 
 <body class="amenities-page">
+  <a href="#main-content" class="visually-hidden-focusable skip-link">Skip to main content</a>
 
   <header id="header" class="header d-flex align-items-center fixed-top">
     <div class="container position-relative d-flex align-items-center justify-content-between">
@@ -104,7 +105,7 @@
 
     </div>
   </header>
-  <main class="main">
+  <main class="main" id="main-content" role="main">
 
     <!-- Page Title -->
     <div class="page-title dark-background" data-aos="fade" style="background-image: url(assets/img/hotel/showcase-7.webp);">
@@ -130,7 +131,7 @@
           <div class="col-lg-8">
             <div class="room-gallery">
               <div class="main-image-container image-zoom-container">
-                <img id="main-product-image" src="assets/img/hotel/room-1.webp" alt="Presidential Suite" class="img-fluid main-room-image" data-zoom="assets/img/hotel/room-1.webp">
+                <img id="main-product-image" src="assets/img/hotel/room-1.webp" alt="Room image: Presidential Suite" class="img-fluid main-room-image" data-zoom="assets/img/hotel/room-1.webp">
                 <div class="image-nav-buttons">
                   <button class="image-nav-btn prev-image" type="button">
                     <i class="bi bi-chevron-left"></i>
@@ -142,19 +143,19 @@
               </div>
               <div class="thumbnail-gallery thumbnail-list">
                 <div class="thumbnail-item active" data-image="assets/img/hotel/room-1.webp">
-                  <img src="assets/img/hotel/room-1.webp" alt="Presidential Suite" class="img-fluid">
+                  <img src="assets/img/hotel/room-1.webp" alt="Room image: Presidential Suite" class="img-fluid">
                 </div>
                 <div class="thumbnail-item" data-image="assets/img/hotel/room-3.webp">
-                  <img src="assets/img/hotel/room-3.webp" alt="Bedroom View" class="img-fluid">
+                  <img src="assets/img/hotel/room-3.webp" alt="Room image: Bedroom View" class="img-fluid">
                 </div>
                 <div class="thumbnail-item" data-image="assets/img/hotel/room-7.webp">
-                  <img src="assets/img/hotel/room-7.webp" alt="Bathroom" class="img-fluid">
+                  <img src="assets/img/hotel/room-7.webp" alt="Room image: Bathroom" class="img-fluid">
                 </div>
                 <div class="thumbnail-item" data-image="assets/img/hotel/room-12.webp">
-                  <img src="assets/img/hotel/room-12.webp" alt="City View" class="img-fluid">
+                  <img src="assets/img/hotel/room-12.webp" alt="Room image: City View" class="img-fluid">
                 </div>
                 <div class="thumbnail-item" data-image="assets/img/hotel/room-15.webp">
-                  <img src="assets/img/hotel/room-15.webp" alt="Living Area" class="img-fluid">
+                  <img src="assets/img/hotel/room-15.webp" alt="Room image: Living Area" class="img-fluid">
                 </div>
               </div>
             </div>
@@ -166,11 +167,11 @@
               <div class="room-header">
                 <h2>Presidential Suite</h2>
                 <div class="room-rating">
-                  <i class="bi bi-star-fill"></i>
-                  <i class="bi bi-star-fill"></i>
-                  <i class="bi bi-star-fill"></i>
-                  <i class="bi bi-star-fill"></i>
-                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill" aria-hidden="true"></i>
+                  <i class="bi bi-star-fill" aria-hidden="true"></i>
+                  <i class="bi bi-star-fill" aria-hidden="true"></i>
+                  <i class="bi bi-star-fill" aria-hidden="true"></i>
+                  <i class="bi bi-star-fill" aria-hidden="true"></i>
                   <span class="rating-text">(4.9)</span>
                 </div>
               </div>
@@ -229,16 +230,16 @@
             <div class="room-info-tabs" data-aos="fade-up" data-aos-delay="300">
               <ul class="nav nav-tabs" id="roomTabs" role="tablist">
                 <li class="nav-item" role="presentation">
-                  <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#room-details-overview" type="button" role="tab">Overview</button>
+                  <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#room-details-overview" type="button" role="tab" aria-controls="room-details-overview" aria-selected="true">Overview</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                  <button class="nav-link" id="amenities-tab" data-bs-toggle="tab" data-bs-target="#room-details-amenities" type="button" role="tab">Amenities</button>
+                  <button class="nav-link" id="amenities-tab" data-bs-toggle="tab" data-bs-target="#room-details-amenities" type="button" role="tab" aria-controls="room-details-amenities" aria-selected="false">Amenities</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                  <button class="nav-link" id="policies-tab" data-bs-toggle="tab" data-bs-target="#room-details-policies" type="button" role="tab">Policies</button>
+                  <button class="nav-link" id="policies-tab" data-bs-toggle="tab" data-bs-target="#room-details-policies" type="button" role="tab" aria-controls="room-details-policies" aria-selected="false">Policies</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                  <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#room-details-reviews" type="button" role="tab">Reviews</button>
+                  <button class="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#room-details-reviews" type="button" role="tab" aria-controls="room-details-reviews" aria-selected="false">Reviews</button>
                 </li>
               </ul>
 
@@ -412,111 +413,42 @@
                       <div class="col-lg-4">
                         <div class="review-summary">
                           <div class="overall-rating">
-                            <span class="rating-number">4.9</span>
+                            <span class="rating-number"><?php echo $avg_rating > 0 ? $avg_rating : 'N/A'; ?></span>
                             <div class="rating-stars">
-                              <i class="bi bi-star-fill"></i>
-                              <i class="bi bi-star-fill"></i>
-                              <i class="bi bi-star-fill"></i>
-                              <i class="bi bi-star-fill"></i>
-                              <i class="bi bi-star-fill"></i>
+                              <?php for($i=1;$i<=5;$i++): ?>
+                                <i class="bi bi-star<?php echo ($i <= round($avg_rating)) ? '-fill' : ''; ?>"></i>
+                              <?php endfor; ?>
                             </div>
-                            <p class="review-count">Based on 247 reviews</p>
-                          </div>
-
-                          <div class="rating-breakdown">
-                            <div class="rating-item">
-                              <span class="rating-label">Cleanliness</span>
-                              <div class="rating-bar">
-                                <div class="rating-fill" style="width: 95%"></div>
-                              </div>
-                              <span class="rating-value">4.8</span>
-                            </div>
-                            <div class="rating-item">
-                              <span class="rating-label">Comfort</span>
-                              <div class="rating-bar">
-                                <div class="rating-fill" style="width: 98%"></div>
-                              </div>
-                              <span class="rating-value">4.9</span>
-                            </div>
-                            <div class="rating-item">
-                              <span class="rating-label">Service</span>
-                              <div class="rating-bar">
-                                <div class="rating-fill" style="width: 94%"></div>
-                              </div>
-                              <span class="rating-value">4.7</span>
-                            </div>
-                            <div class="rating-item">
-                              <span class="rating-label">Location</span>
-                              <div class="rating-bar">
-                                <div class="rating-fill" style="width: 96%"></div>
-                              </div>
-                              <span class="rating-value">4.8</span>
-                            </div>
+                            <p class="review-count">Based on <?php echo count($reviews); ?> review<?php echo count($reviews) == 1 ? '' : 's'; ?></p>
                           </div>
                         </div>
                       </div>
-
                       <div class="col-lg-8">
                         <div class="reviews-list">
-                          <div class="review-item">
-                            <div class="reviewer-info">
-                              <img src="assets/img/person/person-f-3.webp" alt="Sarah M." class="reviewer-avatar">
-                              <div class="reviewer-details">
-                                <h5>Sarah M.</h5>
-                                <div class="review-stars">
-                                  <i class="bi bi-star-fill"></i>
-                                  <i class="bi bi-star-fill"></i>
-                                  <i class="bi bi-star-fill"></i>
-                                  <i class="bi bi-star-fill"></i>
-                                  <i class="bi bi-star-fill"></i>
+                          <?php if(count($reviews) == 0): ?>
+                            <div class="alert alert-info">No reviews yet for this room.</div>
+                          <?php else: ?>
+                            <?php foreach($reviews as $review): ?>
+                              <?php if(isset($review->status) && $review->status !== 'approved') continue; ?>
+                              <div class="review-item mb-4">
+                                <div class="reviewer-info d-flex align-items-center mb-2">
+                                  <div class="reviewer-details ms-2">
+                                    <h5><?php echo htmlspecialchars($review->first_name . ' ' . $review->last_name); ?></h5>
+                                    <div class="review-stars">
+                                      <?php for($i=1;$i<=5;$i++): ?>
+                                        <i class="bi bi-star<?php echo ($i <= $review->rating) ? '-fill' : ''; ?>"></i>
+                                      <?php endfor; ?>
+                                    </div>
+                                    <span class="review-date"><?php echo date('F d, Y', strtotime($review->created_at)); ?></span>
+                                  </div>
                                 </div>
-                                <span class="review-date">March 15, 2024</span>
+                                <p class="review-text"><?php echo nl2br(htmlspecialchars($review->review_text)); ?></p>
+                                <?php if(!empty($review->admin_reply)): ?>
+                                  <div class="alert alert-secondary mt-2"><strong>Admin Reply:</strong> <?php echo nl2br(htmlspecialchars($review->admin_reply)); ?></div>
+                                <?php endif; ?>
                               </div>
-                            </div>
-                            <p class="review-text">
-                              "Absolutely stunning suite with breathtaking city views. The marble bathroom was luxurious and the bed incredibly comfortable. Service was impeccable throughout our stay."
-                            </p>
-                          </div>
-
-                          <div class="review-item">
-                            <div class="reviewer-info">
-                              <img src="assets/img/person/person-m-7.webp" alt="Michael R." class="reviewer-avatar">
-                              <div class="reviewer-details">
-                                <h5>Michael R.</h5>
-                                <div class="review-stars">
-                                  <i class="bi bi-star-fill"></i>
-                                  <i class="bi bi-star-fill"></i>
-                                  <i class="bi bi-star-fill"></i>
-                                  <i class="bi bi-star-fill"></i>
-                                  <i class="bi bi-star-fill"></i>
-                                </div>
-                                <span class="review-date">February 28, 2024</span>
-                              </div>
-                            </div>
-                            <p class="review-text">
-                              "Perfect for our anniversary celebration. The suite exceeded our expectations in every way. The private balcony was our favorite feature."
-                            </p>
-                          </div>
-
-                          <div class="review-item">
-                            <div class="reviewer-info">
-                              <img src="assets/img/person/person-f-11.webp" alt="Jessica L." class="reviewer-avatar">
-                              <div class="reviewer-details">
-                                <h5>Jessica L.</h5>
-                                <div class="review-stars">
-                                  <i class="bi bi-star-fill"></i>
-                                  <i class="bi bi-star-fill"></i>
-                                  <i class="bi bi-star-fill"></i>
-                                  <i class="bi bi-star-fill"></i>
-                                  <i class="bi bi-star"></i>
-                                </div>
-                                <span class="review-date">January 12, 2024</span>
-                              </div>
-                            </div>
-                            <p class="review-text">
-                              "Beautiful room with excellent amenities. The only minor issue was the check-in process took longer than expected, but the staff made up for it with exceptional service."
-                            </p>
-                          </div>
+                            <?php endforeach; ?>
+                          <?php endif; ?>
                         </div>
                       </div>
                     </div>
