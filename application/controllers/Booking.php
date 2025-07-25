@@ -4,8 +4,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Booking extends CI_Controller {
     public function __construct() {
         parent::__construct();
-        $this->load->model(['Room_model', 'Booking_model', 'User_model']);
+        $this->load->model(['Room_model', 'Booking_model', 'User_model', 'Room_inventory_model', 'Coupon_model']);
         $this->load->library(['form_validation', 'session']);
+        $this->load->helper(['url', 'notification']);
     }
 
     // Main booking page
@@ -60,13 +61,16 @@ class Booking extends CI_Controller {
         ];
         $this->session->set_userdata('booking_search', $search_data);
 
-        // Find available rooms
-        $available_rooms = $this->find_available_rooms($check_in, $check_out, $adults, $children, $rooms);
+        // Find available rooms using inventory system
+        $available_rooms = $this->Room_inventory_model->get_available_room_types($check_in, $check_out, $rooms);
+        
         if (empty($available_rooms)) {
             // Store search data for waitlist
             $this->session->set_userdata('waitlist_search', $search_data);
+            $this->session->set_flashdata('info', 'No rooms available for your selected dates. You can join our waitlist.');
             redirect('booking/waitlist_form');
         }
+        
         redirect('booking/select_room');
     }
 
@@ -74,13 +78,18 @@ class Booking extends CI_Controller {
     public function select_room() {
         $search_data = $this->session->userdata('booking_search');
         if (!$search_data) redirect('booking');
-        $available_rooms = $this->find_available_rooms(
+        
+        $available_rooms = $this->Room_inventory_model->get_available_room_types(
             $search_data['check_in_date'],
             $search_data['check_out_date'],
-            $search_data['adults'],
-            $search_data['children'],
             $search_data['rooms']
         );
+        
+        // Calculate total price for each room type
+        foreach ($available_rooms as $room) {
+            $room->total_price = $room->price_per_night * $search_data['nights'] * $search_data['rooms'];
+        }
+        
         $data['rooms'] = $available_rooms;
         $data['search_data'] = $search_data;
         $this->load->view('booking/select_room', $data);
@@ -292,9 +301,63 @@ class Booking extends CI_Controller {
             'status' => 'waiting',
             'created_at' => date('Y-m-d H:i:s')
         ];
-        $this->Waitlist_model->add_waitlist($waitlist_data);
-        $this->session->unset_userdata('waitlist_search');
-        $this->session->set_flashdata('success', 'You have been added to the waitlist. We will notify you if a room becomes available.');
+        if ($this->Waitlist_model->add_waitlist($waitlist_data)) {
+            $this->session->unset_userdata('waitlist_search');
+            $this->session->set_flashdata('success', 'You have been added to the waitlist. We will notify you if a room becomes available.');
+        } else {
+            $this->session->set_flashdata('error', 'Failed to add to waitlist. Please try again.');
+        }
         redirect('booking');
+    }
+    
+    // Apply coupon code (AJAX)
+    public function validate_coupon() {
+        $coupon_code = $this->input->post('coupon_code');
+        $total_amount = $this->input->post('total_amount');
+        
+        if (!$coupon_code || !$total_amount) {
+            echo json_encode(['success' => false, 'message' => 'Invalid request']);
+            return;
+        }
+        
+        $coupon = $this->Coupon_model->get_active_coupon($coupon_code);
+        
+        if (!$coupon) {
+            echo json_encode(['success' => false, 'message' => 'Invalid coupon code']);
+            return;
+        }
+        
+        // Check usage limits
+        if ($coupon->max_uses && $coupon->used_count >= $coupon->max_uses) {
+            echo json_encode(['success' => false, 'message' => 'Coupon usage limit exceeded']);
+            return;
+        }
+        
+        // Check if user has already used this coupon
+        if ($this->session->userdata('logged_in')) {
+            $user_id = $this->session->userdata('user_id');
+            if ($this->Coupon_model->has_used_coupon($user_id, null, $coupon->id)) {
+                echo json_encode(['success' => false, 'message' => 'You have already used this coupon']);
+                return;
+            }
+        }
+        
+        // Calculate discount
+        $discount_amount = 0;
+        if ($coupon->discount_type == 'percent') {
+            $discount_amount = ($total_amount * $coupon->discount_value) / 100;
+        } else {
+            $discount_amount = min($coupon->discount_value, $total_amount);
+        }
+        
+        $new_total = $total_amount - $discount_amount;
+        
+        echo json_encode([
+            'success' => true,
+            'discount_amount' => number_format($discount_amount, 2),
+            'new_total' => number_format($new_total, 2),
+            'discount_type' => $coupon->discount_type,
+            'discount_value' => $coupon->discount_value
+        ]);
     }
 } 

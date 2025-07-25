@@ -163,4 +163,111 @@ class User_model extends CI_Model {
         $user = $this->get_user_by_id($user_id);
         return $user && $user->preferences ? json_decode($user->preferences, true) : [];
     }
+
+    // Get user by username or email
+    public function get_user_by_username_or_email($username) {
+        $this->db->where('username', $username);
+        $this->db->or_where('email', $username);
+        $this->db->where('status', 'active');
+        return $this->db->get('users')->row();
+    }
+
+    // Get user by email
+    public function get_user_by_email($email) {
+        $this->db->where('email', $email);
+        $this->db->where('status', 'active');
+        return $this->db->get('users')->row();
+    }
+
+    // Increment failed login attempts
+    public function increment_failed_attempts($user_id) {
+        $this->db->set('failed_login_attempts', 'failed_login_attempts + 1', false);
+        $this->db->set('last_failed_login', date('Y-m-d H:i:s'));
+        $this->db->where('id', $user_id);
+        return $this->db->update('users');
+    }
+
+    // Reset failed login attempts
+    public function reset_failed_attempts($user_id) {
+        $this->db->where('id', $user_id);
+        return $this->db->update('users', [
+            'failed_login_attempts' => 0,
+            'last_failed_login' => null,
+            'account_locked_until' => null
+        ]);
+    }
+
+    // Lock user account
+    public function lock_account($user_id, $locked_until) {
+        $this->db->where('id', $user_id);
+        return $this->db->update('users', ['account_locked_until' => $locked_until]);
+    }
+
+    // Set 2FA code
+    public function set_2fa_code($user_id, $code, $expires) {
+        $this->db->where('id', $user_id);
+        return $this->db->update('users', [
+            'last_2fa_code' => $code,
+            'last_2fa_expires' => $expires
+        ]);
+    }
+
+    // Verify 2FA code
+    public function verify_2fa_code($user_id, $code) {
+        $this->db->where('id', $user_id);
+        $this->db->where('last_2fa_code', $code);
+        $this->db->where('last_2fa_expires >=', date('Y-m-d H:i:s'));
+        $user = $this->db->get('users')->row();
+
+        if ($user) {
+            // Clear 2FA code after successful verification
+            $this->db->where('id', $user_id);
+            $this->db->update('users', [
+                'last_2fa_code' => null,
+                'last_2fa_expires' => null
+            ]);
+            return true;
+        }
+
+        return false;
+    }
+
+    // Set password reset token
+    public function set_password_reset_token($user_id, $token, $expires) {
+        $this->db->where('id', $user_id);
+        return $this->db->update('users', [
+            'password_reset_token' => $token,
+            'password_reset_expires' => $expires
+        ]);
+    }
+
+    // Get user by reset token
+    public function get_user_by_reset_token($token) {
+        $this->db->where('password_reset_token', $token);
+        $this->db->where('status', 'active');
+        return $this->db->get('users')->row();
+    }
+
+    // Clear password reset token
+    public function clear_password_reset_token($user_id) {
+        $this->db->where('id', $user_id);
+        return $this->db->update('users', [
+            'password_reset_token' => null,
+            'password_reset_expires' => null
+        ]);
+    }
+
+    // Update password
+    public function update_password($user_id, $password) {
+        $this->db->where('id', $user_id);
+        return $this->db->update('users', [
+            'password' => password_hash($password, PASSWORD_DEFAULT)
+        ]);
+    }
+
+    // Update last login time
+    public function update_last_login($user_id) {
+        $this->db->where('id', $user_id);
+        return $this->db->update('users', ['updated_at' => date('Y-m-d H:i:s')]);
+    }
 } 
