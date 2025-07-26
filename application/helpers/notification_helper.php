@@ -20,7 +20,7 @@ if (!function_exists('send_booking_notification')) {
             $body = $message;
             $CI->email->message($body);
         }
-        $CI->email->send();
+        $email_sent = $CI->email->send();
         // Log communication
         $user_id = isset($vars['user_id']) ? $vars['user_id'] : null;
         $CI->db->insert('communication_logs', [
@@ -29,7 +29,9 @@ if (!function_exists('send_booking_notification')) {
             'type' => 'booking_notification',
             'subject' => $subject,
             'body' => $body,
-            'sent_at' => date('Y-m-d H:i:s')
+            'sent_at' => date('Y-m-d H:i:s'),
+            'status' => $email_sent ? 'success' : 'failure',
+            'error_message' => $email_sent ? null : $CI->email->print_debugger(['headers'])
         ]);
     }
 } 

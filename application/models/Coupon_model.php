@@ -10,7 +10,10 @@ class Coupon_model extends CI_Model {
     public function get_active_coupon($code) {
         $this->db->where('code', $code);
         $this->db->where('active', 1);
-        $this->db->where('(expiry_date IS NULL OR expiry_date >= CURDATE())');
+        $this->db->group_start();
+        $this->db->where('expiry_date IS NULL', null, false);
+        $this->db->or_where('expiry_date >=', date('Y-m-d'));
+        $this->db->group_end();
         $query = $this->db->get('coupons');
         return $query->row();
     }

@@ -89,6 +89,13 @@ class Auth extends CI_Controller {
         if (!$user_id) {
             redirect('auth/admin_login');
         }
+        // Brute-force protection: allow max 5 attempts per session
+        $retries = $this->session->userdata('admin_2fa_retries') ?: 0;
+        $lockout_until = $this->session->userdata('admin_2fa_lockout_until');
+        if ($lockout_until && strtotime($lockout_until) > time()) {
+            $this->session->set_flashdata('error', 'Too many failed attempts. Please try again after 5 minutes.');
+            redirect('auth/admin_2fa');
+        }
         $this->form_validation->set_rules('code', '2FA Code', 'required|exact_length[6]');
         if ($this->form_validation->run() == FALSE) {
             $this->session->set_flashdata('error', 'Please enter the 6-digit code sent to your email.');
@@ -98,20 +105,21 @@ class Auth extends CI_Controller {
         $user = $this->User_model->get_user_by_id($user_id);
         if ($user && $user->last_2fa_code === $code && $user->last_2fa_expires >= date('Y-m-d H:i:s')) {
             // Complete login
-            $this->session->set_userdata([
-                'user_id' => $user->id,
-                'username' => $user->username,
-                'email' => $user->email,
-                'role' => $user->role,
-                'logged_in' => TRUE
-            ]);
-            $this->session->unset_userdata('pending_2fa_user_id');
+            $this->session->unset_userdata(['pending_2fa_user_id', 'admin_2fa_retries', 'admin_2fa_lockout_until']);
             // Clear 2FA code
             $this->db->where('id', $user->id);
             $this->db->update('users', ['last_2fa_code' => null, 'last_2fa_expires' => null]);
             redirect('admin/dashboard');
         } else {
-            $this->session->set_flashdata('error', 'Invalid or expired 2FA code.');
+            $retries++;
+            $this->session->set_userdata('admin_2fa_retries', $retries);
+            if ($retries >= 5) {
+                $lockout_until = date('Y-m-d H:i:s', strtotime('+5 minutes'));
+                $this->session->set_userdata('admin_2fa_lockout_until', $lockout_until);
+                $this->session->set_flashdata('error', 'Too many failed attempts. Please try again after 5 minutes.');
+            } else {
+                $this->session->set_flashdata('error', 'Invalid or expired 2FA code. Attempts left: ' . (5 - $retries));
+            }
             redirect('auth/admin_2fa');
         }
     }

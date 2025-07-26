@@ -55,7 +55,7 @@ class Room_model extends CI_Model {
         $this->db->select('bookings.*');
         $this->db->from('bookings');
         $this->db->where('room_id', $room_id);
-        $this->db->where('status IN', ['confirmed', 'checked_in']);
+        $this->db->where_in('status', ['confirmed', 'checked_in']);
         $this->db->where("(check_in_date <= '$check_out' AND check_out_date >= '$check_in')");
         
         return $this->db->get()->num_rows() == 0;
