@@ -1,36 +1,78 @@
 {
-	"description": "The CodeIgniter framework",
-	"name": "codeigniter/framework",
-	"type": "project",
-	"homepage": "https://codeigniter.com",
-	"license": "MIT",
-	"support": {
-		"forum": "http://forum.codeigniter.com/",
-		"wiki": "https://github.com/bcit-ci/CodeIgniter/wiki",
-		"slack": "https://codeigniterchat.slack.com",
-		"source": "https://github.com/bcit-ci/CodeIgniter"
-	},
-	"require": {
-		"php": ">=5.3.7",
-		"stripe/stripe-php": "*"
-	},
-	"suggest": {
-		"paragonie/random_compat": "Provides better randomness in PHP 5.x"
-	},
-	"scripts": {
-		"test:coverage": [
-			"@putenv XDEBUG_MODE=coverage",
-			"phpunit --color=always --coverage-text --configuration tests/travis/sqlite.phpunit.xml"
-		],
-		"post-install-cmd": [
-			"sed -i s/name{0}/name[0]/ vendor/mikey179/vfsstream/src/main/php/org/bovigo/vfs/vfsStream.php"
-		],
-		"post-update-cmd": [
-			"sed -i s/name{0}/name[0]/ vendor/mikey179/vfsstream/src/main/php/org/bovigo/vfs/vfsStream.php"
-		]
-	},
-	"require-dev": {
-		"mikey179/vfsstream": "1.6.*",
-		"phpunit/phpunit": "4.* || 5.* || 9.*"
-	}
+    "name": "hotel-management/system",
+    "description": "Production-ready Hotel Management System built with CodeIgniter 3",
+    "type": "project",
+    "version": "2.0.0",
+    "keywords": ["hotel", "management", "booking", "codeigniter"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Hotel Management Team",
+            "email": "dev@hotel.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.4",
+        "ext-mysqli": "*",
+        "ext-json": "*",
+        "ext-openssl": "*",
+        "ext-mbstring": "*",
+        "ext-curl": "*",
+        "vlucas/phpdotenv": "^5.4",
+        "monolog/monolog": "^2.8",
+        "phpmailer/phpmailer": "^6.8",
+        "ramsey/uuid": "^4.7",
+        "respect/validation": "^2.2",
+        "firebase/php-jwt": "^6.8"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6",
+        "phpstan/phpstan": "^1.10",
+        "squizlabs/php_codesniffer": "^3.7",
+        "friendsofphp/php-cs-fixer": "^3.21"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "application/",
+            "App\\Controllers\\": "application/controllers/",
+            "App\\Models\\": "application/models/",
+            "App\\Libraries\\": "application/libraries/",
+            "App\\Helpers\\": "application/helpers/"
+        },
+        "files": [
+            "application/helpers/environment_helper.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test-coverage": "phpunit --coverage-html coverage",
+        "phpstan": "phpstan analyse",
+        "cs-check": "phpcs",
+        "cs-fix": "phpcbf",
+        "security-check": "composer audit",
+        "post-install-cmd": [
+            "@php -r \"if (!file_exists('.env')) { copy('.env.example', '.env'); }\""
+        ],
+        "post-update-cmd": [
+            "@security-check"
+        ]
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true
+        }
+    },
+    "extra": {
+        "codeigniter-version": "3.x",
+        "php-version-requirements": ">=7.4"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
 }
