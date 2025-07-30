@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
   <meta charset="utf-8">
   <meta content="width=device-width, initial-scale=1.0" name="viewport">
-  <title>Amenities - LuxuryHotel Bootstrap Template</title>
+  <title><?php echo isset($room) ? htmlspecialchars($room->room_type) : 'Room Details'; ?> - LuxuryHotel Bootstrap Template</title>
   <meta name="description" content="">
   <meta name="keywords" content="">
 
@@ -108,13 +108,13 @@
   <main class="main" id="main-content" role="main">
 
     <!-- Page Title -->
-    <div class="page-title dark-background" data-aos="fade" style="background-image: url(assets/img/hotel/showcase-7.webp);">
+    <div class="page-title dark-background" data-aos="fade" style="background-image: url(<?php echo base_url('assets/img/hotel/showcase-7.webp'); ?>);">
       <div class="container position-relative">
         <h1>Room Details</h1>
-        <p>Esse dolorum voluptatum ullam est sint nemo et est ipsa porro placeat quibusdam quia assumenda numquam molestias.</p>
+        <p><?php echo isset($room) ? htmlspecialchars($room->description) : 'Discover our luxurious accommodations designed for your comfort and relaxation.'; ?></p>
         <nav class="breadcrumbs">
           <ol>
-            <li><a href="index.html">Home</a></li>
+            <li><a href="<?php echo base_url(); ?>">Home</a></li>
             <li class="current">Room Details</li>
           </ol>
         </nav>
@@ -131,7 +131,7 @@
           <div class="col-lg-8">
             <div class="room-gallery">
               <div class="main-image-container image-zoom-container">
-                <img id="main-product-image" src="assets/img/hotel/room-1.webp" alt="Room image: Presidential Suite" class="img-fluid main-room-image" data-zoom="assets/img/hotel/room-1.webp">
+                <img id="main-product-image" src="<?php echo base_url('assets/img/hotel/room-1.webp'); ?>" alt="Room image: <?php echo isset($room) ? htmlspecialchars($room->room_type) : 'Presidential Suite'; ?>" class="img-fluid main-room-image" data-zoom="<?php echo base_url('assets/img/hotel/room-1.webp'); ?>">
                 <div class="image-nav-buttons">
                   <button class="image-nav-btn prev-image" type="button">
                     <i class="bi bi-chevron-left"></i>
@@ -142,20 +142,20 @@
                 </div>
               </div>
               <div class="thumbnail-gallery thumbnail-list">
-                <div class="thumbnail-item active" data-image="assets/img/hotel/room-1.webp">
-                  <img src="assets/img/hotel/room-1.webp" alt="Room image: Presidential Suite" class="img-fluid">
+                <div class="thumbnail-item active" data-image="<?php echo base_url('assets/img/hotel/room-1.webp'); ?>">
+                  <img src="<?php echo base_url('assets/img/hotel/room-1.webp'); ?>" alt="Room image: <?php echo isset($room) ? htmlspecialchars($room->room_type) : 'Presidential Suite'; ?>" class="img-fluid">
                 </div>
-                <div class="thumbnail-item" data-image="assets/img/hotel/room-3.webp">
-                  <img src="assets/img/hotel/room-3.webp" alt="Room image: Bedroom View" class="img-fluid">
+                <div class="thumbnail-item" data-image="<?php echo base_url('assets/img/hotel/room-3.webp'); ?>">
+                  <img src="<?php echo base_url('assets/img/hotel/room-3.webp'); ?>" alt="Room image: Bedroom View" class="img-fluid">
                 </div>
-                <div class="thumbnail-item" data-image="assets/img/hotel/room-7.webp">
-                  <img src="assets/img/hotel/room-7.webp" alt="Room image: Bathroom" class="img-fluid">
+                <div class="thumbnail-item" data-image="<?php echo base_url('assets/img/hotel/room-7.webp'); ?>">
+                  <img src="<?php echo base_url('assets/img/hotel/room-7.webp'); ?>" alt="Room image: Bathroom" class="img-fluid">
                 </div>
-                <div class="thumbnail-item" data-image="assets/img/hotel/room-12.webp">
-                  <img src="assets/img/hotel/room-12.webp" alt="Room image: City View" class="img-fluid">
+                <div class="thumbnail-item" data-image="<?php echo base_url('assets/img/hotel/room-12.webp'); ?>">
+                  <img src="<?php echo base_url('assets/img/hotel/room-12.webp'); ?>" alt="Room image: City View" class="img-fluid">
                 </div>
-                <div class="thumbnail-item" data-image="assets/img/hotel/room-15.webp">
-                  <img src="assets/img/hotel/room-15.webp" alt="Room image: Living Area" class="img-fluid">
+                <div class="thumbnail-item" data-image="<?php echo base_url('assets/img/hotel/room-15.webp'); ?>">
+                  <img src="<?php echo base_url('assets/img/hotel/room-15.webp'); ?>" alt="Room image: Living Area" class="img-fluid">
                 </div>
               </div>
             </div>
@@ -165,44 +165,49 @@
           <div class="col-lg-4">
             <div class="room-details-sidebar" data-aos="fade-left" data-aos-delay="200">
               <div class="room-header">
-                <h2>Presidential Suite</h2>
+                <h2><?php echo isset($room) ? htmlspecialchars($room->room_type) : 'Presidential Suite'; ?></h2>
                 <div class="room-rating">
-                  <i class="bi bi-star-fill" aria-hidden="true"></i>
-                  <i class="bi bi-star-fill" aria-hidden="true"></i>
-                  <i class="bi bi-star-fill" aria-hidden="true"></i>
-                  <i class="bi bi-star-fill" aria-hidden="true"></i>
-                  <i class="bi bi-star-fill" aria-hidden="true"></i>
-                  <span class="rating-text">(4.9)</span>
+                  <?php if (isset($avg_rating) && $avg_rating > 0): ?>
+                    <?php for($i = 1; $i <= 5; $i++): ?>
+                      <i class="bi bi-star<?php echo ($i <= round($avg_rating)) ? '-fill' : ''; ?>" aria-hidden="true"></i>
+                    <?php endfor; ?>
+                    <span class="rating-text">(<?php echo $avg_rating; ?>)</span>
+                  <?php else: ?>
+                    <span class="rating-text">No ratings yet</span>
+                  <?php endif; ?>
                 </div>
               </div>
 
               <div class="room-price">
                 <div class="price-value">
                   <span class="currency">$</span>
-                  <span class="amount">899</span>
+                  <span class="amount"><?php echo isset($room) ? number_format($room->price_per_night, 0) : '899'; ?></span>
                   <span class="period">/night</span>
                 </div>
                 <p class="price-note">*Taxes and fees not included</p>
               </div>
 
               <div class="booking-form">
-                <form action="" method="post">
+                <form action="<?php echo base_url('booking/search_availability'); ?>" method="post">
+                  <input type="hidden" name="room_id" value="<?php echo isset($room) ? $room->id : '1'; ?>">
                   <div class="row">
                     <div class="col-12 mb-3">
                       <label for="checkin-date" class="form-label">Check-in</label>
-                      <input type="date" class="form-control" id="checkin-date" name="checkin" required="">
+                      <input type="date" class="form-control" id="checkin-date" name="check_in_date" min="<?php echo date('Y-m-d'); ?>" required="">
                     </div>
                     <div class="col-12 mb-3">
                       <label for="checkout-date" class="form-label">Check-out</label>
-                      <input type="date" class="form-control" id="checkout-date" name="checkout" required="">
+                      <input type="date" class="form-control" id="checkout-date" name="check_out_date" min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>" required="">
                     </div>
                     <div class="col-6 mb-3">
                       <label for="guests" class="form-label">Guests</label>
-                      <select class="form-control" id="guests" name="guests" required="">
-                        <option value="1">1 Guest</option>
-                        <option value="2">2 Guests</option>
-                        <option value="3">3 Guests</option>
-                        <option value="4">4 Guests</option>
+                      <select class="form-control" id="guests" name="adults" required="">
+                        <?php 
+                        $max_capacity = isset($room) ? $room->capacity : 4;
+                        for($i = 1; $i <= $max_capacity; $i++): 
+                        ?>
+                          <option value="<?php echo $i; ?>"><?php echo $i; ?> Guest<?php echo $i > 1 ? 's' : ''; ?></option>
+                        <?php endfor; ?>
                       </select>
                     </div>
                     <div class="col-6 mb-3">
@@ -249,10 +254,7 @@
                     <div class="col-lg-8">
                       <h3>Room Description</h3>
                       <p class="room-description">
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Mauris viverra veniam sit amet lacus cursus bibendum. Pellentesque non nisi enim. Maecenas malesuada lorem vel cursus blandit. Sed tempor, ipsum vel cursus bibendum, nunc nisl aliquam mauris, eget aliquam lacus nunc vel nisl.
-                      </p>
-                      <p>
-                        Nunc auctor, nisl eget ultricies tincidunt, nunc nisl aliquam mauris, eget aliquam lacus nunc vel nisl. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Mauris viverra veniam sit amet lacus cursus bibendum.
+                        <?php echo isset($room) && $room->description ? nl2br(htmlspecialchars($room->description)) : 'Experience luxury and comfort in our beautifully appointed accommodations. Each room features modern amenities and elegant furnishings designed to make your stay unforgettable.'; ?>
                       </p>
 
                       <div class="room-features-grid mt-4">
@@ -260,7 +262,7 @@
                           <i class="bi bi-people"></i>
                           <div class="feature-info">
                             <h5>Max Occupancy</h5>
-                            <p>4 Guests</p>
+                            <p><?php echo isset($room) ? $room->capacity : '4'; ?> Guests</p>
                           </div>
                         </div>
                         <div class="feature-item">
@@ -290,8 +292,8 @@
                       <div class="room-stats">
                         <h4>Quick Stats</h4>
                         <div class="stat-item">
-                          <span class="stat-label">Floor Level:</span>
-                          <span class="stat-value">25-30th Floor</span>
+                          <span class="stat-label">Room Number:</span>
+                          <span class="stat-value"><?php echo isset($room) ? htmlspecialchars($room->room_number) : 'N/A'; ?></span>
                         </div>
                         <div class="stat-item">
                           <span class="stat-label">Balcony:</span>
@@ -413,19 +415,21 @@
                       <div class="col-lg-4">
                         <div class="review-summary">
                           <div class="overall-rating">
-                            <span class="rating-number"><?php echo $avg_rating > 0 ? $avg_rating : 'N/A'; ?></span>
-                            <div class="rating-stars">
-                              <?php for($i=1;$i<=5;$i++): ?>
-                                <i class="bi bi-star<?php echo ($i <= round($avg_rating)) ? '-fill' : ''; ?>"></i>
-                              <?php endfor; ?>
-                            </div>
-                            <p class="review-count">Based on <?php echo count($reviews); ?> review<?php echo count($reviews) == 1 ? '' : 's'; ?></p>
+                            <span class="rating-number"><?php echo (isset($avg_rating) && $avg_rating > 0) ? $avg_rating : 'N/A'; ?></span>
+                                                          <div class="rating-stars">
+                                <?php 
+                                $rating_display = isset($avg_rating) ? $avg_rating : 0;
+                                for($i=1;$i<=5;$i++): ?>
+                                  <i class="bi bi-star<?php echo ($i <= round($rating_display)) ? '-fill' : ''; ?>"></i>
+                                <?php endfor; ?>
+                              </div>
+                              <p class="review-count">Based on <?php echo isset($reviews) ? count($reviews) : 0; ?> review<?php echo (isset($reviews) && count($reviews) == 1) ? '' : 's'; ?></p>
                           </div>
                         </div>
                       </div>
                       <div class="col-lg-8">
                         <div class="reviews-list">
-                          <?php if(count($reviews) == 0): ?>
+                          <?php if(!isset($reviews) || count($reviews) == 0): ?>
                             <div class="alert alert-info">No reviews yet for this room.</div>
                           <?php else: ?>
                             <?php foreach($reviews as $review): ?>
@@ -576,6 +580,41 @@
 
 <!-- Main JS File -->
 <script src="<?php echo base_url('assets/js/main.js') ?>"></script>
+
+<!-- Room Details Page JS -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const checkinDate = document.getElementById('checkin-date');
+    const checkoutDate = document.getElementById('checkout-date');
+    
+    checkinDate.addEventListener('change', function() {
+        const checkinValue = this.value;
+        if (checkinValue) {
+            // Set minimum checkout date to day after checkin
+            const nextDay = new Date(checkinValue);
+            nextDay.setDate(nextDay.getDate() + 1);
+            checkoutDate.min = nextDay.toISOString().split('T')[0];
+            
+            // If current checkout is before new minimum, update it
+            if (checkoutDate.value && checkoutDate.value <= checkinValue) {
+                checkoutDate.value = nextDay.toISOString().split('T')[0];
+            }
+        }
+    });
+    
+    // Form validation
+    document.querySelector('.booking-form form').addEventListener('submit', function(e) {
+        const checkin = new Date(checkinDate.value);
+        const checkout = new Date(checkoutDate.value);
+        
+        if (checkout <= checkin) {
+            e.preventDefault();
+            alert('Check-out date must be after check-in date.');
+            return false;
+        }
+    });
+});
+</script>
 
 </body>
 

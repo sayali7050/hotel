@@ -57,4 +57,23 @@ class Review_model extends CI_Model {
         $this->db->where('id', $id);
         return $this->db->update('reviews', ['admin_reply' => $reply]);
     }
+
+    // Get reviews by user
+    public function get_reviews_by_user($user_id) {
+        $this->db->select('reviews.*, rooms.room_number, rooms.room_type');
+        $this->db->from('reviews');
+        $this->db->join('rooms', 'reviews.room_id = rooms.id');
+        $this->db->where('reviews.user_id', $user_id);
+        $this->db->order_by('reviews.created_at', 'DESC');
+        return $this->db->get()->result();
+    }
+
+    // Get average rating for a room
+    public function get_room_average_rating($room_id) {
+        $this->db->select_avg('rating');
+        $this->db->where('room_id', $room_id);
+        $this->db->where('status', 'approved');
+        $result = $this->db->get('reviews')->row();
+        return $result ? round($result->rating, 1) : 0;
+    }
 } 

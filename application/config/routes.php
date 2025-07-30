@@ -73,6 +73,7 @@ $route['privacy'] = 'pages/privacy';
 $route['terms'] = 'pages/terms';
 $route['location'] = 'pages/location';
 $route['starter-page'] = 'pages/starter_page';
+$route['room-details/(:num)'] = 'pages/room_details/$1';
 $route['room-details'] = 'pages/room_details';
 
 // Authentication routes
